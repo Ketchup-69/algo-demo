@@ -1,0 +1,54 @@
+name: CI
+
+# The contrast gate, lint and build only protect the site if something runs
+# them BEFORE a merge. deploy.yml fires on push to main, which is too late to
+# stop a regression landing — this is the check that actually gates.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      # Run the gate on its own as well as inside the build, so a contrast
+      # regression is reported as its own failing step rather than buried in
+      # build output.
+      - name: Contrast gate
+        run: npm run check:contrast
+
+      - name: Build static export
+        run: npm run build
+
+      - name: Verify export output
+        run: |
+          test -f out/index.html || { echo "missing out/index.html"; exit 1; }
+          test -f out/styleguide/index.html || { echo "missing styleguide"; exit 1; }
+          test -f out/.nojekyll || { echo "missing .nojekyll — Pages will drop _next/"; exit 1; }
+
+      # basePath is the one-line switch to a custom domain, so prove it still
+      # rewrites every asset path rather than finding out after a deploy.
+      - name: Build with basePath and verify prefixing
+        env:
+          NEXT_PUBLIC_BASE_PATH: /algo-demo
+        run: |
+          npm run build
+          grep -q '/algo-demo/_next/' out/index.html || { echo "basePath not applied"; exit 1; }
+          if grep -q '"/_next/' out/index.html; then echo "found unprefixed /_next/ refs"; exit 1; fi
