@@ -75,6 +75,16 @@ hardcoded strings, because the owner edits copy without touching JSX.
 
 ## Deploying
 
+**One-time setup, required before the first deploy can succeed:**
+in the repo, go to **Settings → Pages → Build and deployment** and set
+**Source: GitHub Actions**.
+
+Until that switch is flipped, the deploy job fails at `actions/configure-pages`
+with `Get Pages site failed ... Not Found`. The workflow cannot do this for
+itself: creating a Pages site requires repo admin, while the workflow's
+`GITHUB_TOKEN` caps at `pages: write` — enough to deploy into an existing site,
+not to create one. A human admin has to do it once.
+
 `.github/workflows/deploy.yml` builds on push to `main` and publishes `out/` to
 GitHub Pages.
 

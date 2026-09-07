@@ -45,13 +45,16 @@ jobs:
         # runs the output through Jekyll, which drops every _next/ directory.
         run: touch out/.nojekyll
 
+      # ONE-TIME MANUAL SETUP REQUIRED:
+      #   Settings -> Pages -> Build and deployment -> Source: GitHub Actions
+      #
+      # Until that is done this step fails with "Get Pages site failed / Not
+      # Found". `enablement: true` does NOT solve it: creating a Pages site
+      # needs repo admin, and the workflow GITHUB_TOKEN caps at `pages: write`,
+      # which only permits deploying to a site that already exists. It fails
+      # with "Resource not accessible by integration" instead. A repo admin has
+      # to flip the switch once; every deploy after that is automatic.
       - uses: actions/configure-pages@v5
-        with:
-          # Creates the Pages site on first run instead of failing with
-          # "Get Pages site failed / Not Found" when Pages has never been
-          # switched on for the repo. Needs the `pages: write` permission
-          # declared above.
-          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
