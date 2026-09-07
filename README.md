@@ -1,107 +1,96 @@
-CLAUDE.md — Algomotive Website
-Drop this at the repo root. Claude Code reads it automatically on every session. Do not delete it between phases.
----
-1. What this is
-A marketing site for Algomotive, a UAE company that builds and deploys AI agents for enterprise finance and operations teams. The agents sit on top of the systems a company already runs (ERP, PMS), read from them, prepare the work, and wait for a human to approve before anything is recorded.
-The site has two jobs, in this order:
-Credibility. A CFO or finance director looks Algomotive up after a call or an email. In 30 seconds they need to conclude: this is a real, serious, technically competent company.
-Inbound. The site should be findable in search and in AI-assistant answers, and interesting enough that a cold visitor scrolls the whole thing.
-Audience: finance leaders (CFO, Financial Controller, Finance Manager) and IT directors at multi-entity operations — hotel groups, restaurant chains, food distribution, serviced apartments, and any company running several entities on one finance team.
-Tone: precise, calm, technically literate, zero hype. Nobody in this audience is impressed by "revolutionary." They are impressed by "read-only, human sign-off, full audit trail."
----
-2. Hard rules — never break these
-Algomotive is the only brand name that appears anywhere. No other vendor, platform, partner, or parent company is named, referenced, hinted at, or left in a comment. Not in code, not in metadata, not in commit messages.
-No customer names, client names, or client logos. None. Not in placeholders, not in alt text, not in sample data.
-No pricing. No numbers, no tiers, no "starting from." The next step is always a conversation.
-No testimonials, case studies, or performance metrics presented as real. Those sections get built as empty, clearly-marked placeholders for the owner to fill later.
-No stock photography. No AI-generated imagery. No people photos.
-Google Sans / Product Sans must not be used. They are proprietary and not licensable.
-No `localStorage` reliance for anything load-bearing (theme toggle may use it with a safe fallback).
-Anything you are unsure is publishable → make it a placeholder and flag it in your summary. Never invent a fact about the company.
----
-3. Stack and constraints
-Next.js (App Router) + TypeScript, `output: 'export'` — fully static.
-Tailwind CSS v4 with CSS variables as the token layer.
-GSAP + ScrollTrigger for scroll-driven motion. Framer Motion for component-level and interaction motion. Don't use both on the same element.
-Deploy target: GitHub Pages. Therefore: no API routes, no server actions, no ISR, no image optimization loader (`images: { unoptimized: true }`).
-`basePath` and `assetPrefix` must be driven by a single env var so switching from `user.github.io/repo` to a custom domain is a one-line change. Include `.nojekyll` in the output.
-Forms are `mailto:` only. No third-party form backend. See §7.
-No analytics in v1. Leave a single commented-out slot in the root layout for a script tag.
-Package manager: npm unless the repo already says otherwise.
----
-4. Design direction
-Reference points the owner chose: openai.com, vercel.com, anthropic.com. Read: type-first, generous whitespace, restrained colour, one memorable moment per page rather than effects everywhere.
-Light is the default theme. A dark toggle exists and must be genuinely designed, not an inverted afterthought — check contrast on every surface in both.
-Colour tokens (exact, do not invent shades)
-```css
---algo-ink: #17243f;
---algo-navy: #10203b;
---algo-blue: #3978e8;
---algo-sky: #72c9f4;
---algo-cyan: #2fc5e8;
---algo-aqua: #57e0dc;
---algo-paper: #fbfaf7;
---algo-surface: #ffffff;
---algo-soft-blue: #eef5ff;
---algo-line: #dfe7f3;
---algo-muted: #6d7d95;
---algo-success: #48ba86;
---algo-warning: #f0ae3c;
---algo-danger: #e76c54;
---algo-purple: #7065d8;
+# Algomotive — website
+
+Static marketing site. Next.js App Router, TypeScript, Tailwind v4, exported to
+plain HTML and served from GitHub Pages.
+
+`CLAUDE.md` is the brief: brand rules, palette, tone, and the hard constraints.
+Read it before changing anything visual.
+
+## Running it
+
+```bash
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # contrast gate, then a static export into out/
+npm run lint
 ```
-Semantic aliases (`--bg`, `--fg`, `--fg-muted`, `--border`, `--accent`, `--surface-raised`) map onto these and are what components actually reference. Dark mode remaps the aliases only. Never hardcode a hex in a component.
-Cyan/sky/aqua are accent and motion colours — used in the signature moment, state changes, and the agent visual. They are not background washes. Resist gradient mesh.
-Typography
-Interim pairing, to be swapped when the brand book arrives:
-Display / headings: Geist (via `next/font`)
-Body / UI: Inter
-Both are loaded through a single `fonts.ts` so replacing them later touches one file. Set a real type scale (roughly 1.25 ratio), tight tracking on large display sizes, body line length under 75 characters.
-Anti-patterns — these read as AI-generated, avoid them
-Tracked-out ALL-CAPS eyebrow labels above every heading.
-Colouring or bolding one word in a headline for emphasis.
-`01 / 02 / 03` numbered markers on content that isn't an actual sequence. (The "How it works" section is a sequence — numbering is correct there and nowhere else.)
-Every section as an identical rounded card with the same shadow and the same border-radius.
-A `→` glued onto every link and button label.
-Meta strings joined with middle dots.
-Fade-and-slide-up on every single section.
-Spend the boldness in one place. Everything around it stays quiet.
----
-5. Motion rules
-All copy must exist in the static HTML at load. Motion animates elements that are already in the DOM. Never gate text behind a scroll trigger — it breaks search and AI crawlers, which is half the point of the site.
-One orchestrated hero sequence. One signature scroll moment. Restraint everywhere else.
-No scroll-jacking, no hijacked scroll speed, no horizontal-scroll sections.
-`prefers-reduced-motion: reduce` must disable all non-essential motion and render the final state immediately. Test it.
-Kill every ScrollTrigger on unmount. No memory leaks.
-Target: no layout shift, 60fps, transform/opacity only.
----
-6. Content architecture
-All user-facing copy lives in `/content/*.ts` as typed objects. Components import from there and contain zero hardcoded strings. The owner will be editing copy weekly without touching JSX — this is non-negotiable.
-Placeholder convention, used consistently so they're greppable:
-```ts
-// PLACEHOLDER: replace when client logos are approved
+
+`npm run build` runs `check:contrast` first and stops on failure, so an
+inaccessible colour pairing can never reach a deploy.
+
+## How the design system is put together
+
+Four tiers, defined in `src/app/globals.css`, and a component may only ever
+touch the last two:
+
+| Tier | What | Rule |
+|---|---|---|
+| Raw palette | `--algo-*` | The exact brand hexes. Never edited, never referenced by a component. |
+| Semantic aliases | `--bg`, `--fg-muted`, `--accent`… | What components consume. Dark mode remaps only these. |
+| Gradients | `--grad-*` | Buttons, panels and hairlines. Never a full-section wash, never body copy. |
+| Tailwind | `@theme inline` | Turns the aliases into `bg-surface`, `text-fg-muted`, `border-border-strong`. |
+
+**No component ever writes a hex.** If you find yourself reaching for one, the
+alias you need is missing — add it to the token layer instead.
+
+### Contrast
+
+The raw palette cannot hit WCAG AA by itself: brand blue is 4.00 on paper,
+white-on-blue is 4.18, and navy against ink is 1.05 (invisible). So every
+AA-critical alias is derived with `color-mix(in oklab, …)` from two approved
+palette tokens — no new hex enters the codebase, and a brand-book swap
+propagates automatically.
+
+`src/lib/tokens.ts` mirrors those mixes as data. It is the single source for
+both the build gate and the /styleguide page, so the numbers on screen cannot
+drift from the numbers CI enforces. **Change a mix percentage in `globals.css`
+and you must change it in `tokens.ts` too** — the gate is what catches you.
+
+Text is checked at 4.5:1 against every ground it can land on. UI boundaries are
+checked at 3:1. Gradients that carry text are sampled along their whole length
+and judged at their worst stop.
+
+### Theming
+
+`src/lib/theme.ts` holds an inline script that runs in `<head>` before first
+paint, so there is no flash of the wrong theme. It reads `localStorage`, falls
+back to `prefers-color-scheme`, and falls back again to light if storage throws.
+
+The dark selector is a bare `[data-theme="dark"]` rather than `html[...]`, so
+any subtree can be themed independently — which is how /styleguide shows both
+themes at once.
+
+## Layout
+
 ```
-and in content files, a `placeholder: true` flag on any block that is filler.
----
-7. Forms
-Static site, so every form is a `mailto:` composer:
-Render a real, properly validated form (name, work email, company, role, message).
-On submit, build a `mailto:` URL with a structured subject and a body containing the field values, URL-encoded, then open it.
-Show a fallback line with the email address as a copy-to-clipboard button, because `mailto:` fails silently for people on webmail without a handler.
-Every "Contact", "Talk to us", "Book a demo" click resolves to the same composer.
-Email address lives in `/content/site.ts` as one constant.
----
-8. Quality floor
-Responsive from 360px up. Test 360 / 768 / 1280 / 1920.
-Visible keyboard focus rings. Full keyboard navigation. Skip link.
-Semantic landmarks, one `h1` per page, real heading order.
-Contrast AA minimum in both themes.
-Lighthouse: 95+ performance, 100 accessibility, 100 SEO on the static export.
-No console errors or hydration warnings.
----
-9. Working style
-Work in the phases defined in `BUILD-PROMPTS.md`. Don't jump ahead.
-Before writing code in a new phase, state your plan in a few lines and wait if anything is ambiguous.
-Commit at the end of each phase with a clear message.
-After each phase, output: what you built, what you assumed, what you left as a placeholder, and anything you think is a bad idea.
-If a request in a prompt conflicts with a hard rule in §2, stop and say so instead of complying.
+src/app/          routes, root layout, globals.css (the token layer)
+src/components/ui primitives — Container, Section, Button, Link, Heading, Text
+src/content/      all user-facing copy, as typed objects
+src/lib/          fonts, theme, cn(), tokens
+scripts/          check-contrast.mts — the build gate
+```
+
+Copy lives in `src/content/*` and nowhere else. Components contain zero
+hardcoded strings, because the owner edits copy without touching JSX.
+
+## Deploying
+
+`.github/workflows/deploy.yml` builds on push to `main` and publishes `out/` to
+GitHub Pages.
+
+`NEXT_PUBLIC_BASE_PATH` is the single switch between a project page and a custom
+domain. It is set to `/algo-demo` in the workflow and empty everywhere else.
+Moving to an apex domain means blanking it and adding a `CNAME` — one line.
+
+`.nojekyll` is committed at `public/.nojekyll` and re-touched in the workflow.
+Without it Pages runs the output through Jekyll, which silently drops every
+`_next/` directory.
+
+## Phase status
+
+Phase 0 (foundation) is complete: tokens, fonts, theme, primitives, empty
+content layer, deploy pipeline, styleguide.
+
+`/styleguide` is an instrument, not a page — it and
+`src/app/styleguide/SystemPreview.tsx` are deleted in Phase 3. Both are marked
+`PHASE-3-DELETE`.

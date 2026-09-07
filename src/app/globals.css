@@ -1,0 +1,348 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   ALGOMOTIVE TOKEN SYSTEM
+
+   Four tiers, strictly ordered. A component may only ever touch tier 3+.
+
+     1. Raw palette      — the exact brand hexes. Never edited, never
+                           referenced from a component.
+     2. Semantic aliases — what components actually consume. Light lives in
+                           `:root`; dark remaps ONLY these aliases.
+     3. Gradient tier    — derived surfaces, remapped per theme.
+     4. @theme inline    — exposes 2 and 3 to Tailwind so `bg-surface`,
+                           `text-fg-muted`, `border-border-strong` generate.
+
+   CONTRAST
+   The raw palette cannot hit WCAG AA on its own (brand blue is 4.00 on paper,
+   muted is 4.01, white-on-blue is 4.18, and navy-vs-ink in dark is 1.05 —
+   invisible). Rather than invent new brand shades, every AA-critical alias is
+   derived with `color-mix(in oklab, ...)` from two approved palette tokens.
+   No new hex literal exists in this file below tier 1. The comment beside each
+   derived alias is the computed result and its worst-case ratio, so the values
+   can be eyeballed without running the browser.
+
+   `scripts/check-contrast.mjs` re-derives this whole matrix and fails the
+   build on any AA regression. Change a percentage here and that script is the
+   thing that tells you if you broke it.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   TIER 1 — RAW PALETTE (CLAUDE.md §4, exact — do not edit, do not extend)
+   -------------------------------------------------------------------------- */
+:root {
+  --algo-ink: #17243f;
+  --algo-navy: #10203b;
+  --algo-blue: #3978e8;
+  --algo-sky: #72c9f4;
+  --algo-cyan: #2fc5e8;
+  --algo-aqua: #57e0dc;
+  --algo-paper: #fbfaf7;
+  --algo-surface: #ffffff;
+  --algo-soft-blue: #eef5ff;
+  --algo-line: #dfe7f3;
+  --algo-muted: #6d7d95;
+  --algo-success: #48ba86;
+  --algo-warning: #f0ae3c;
+  --algo-danger: #e76c54;
+  --algo-purple: #7065d8;
+}
+
+/* --------------------------------------------------------------------------
+   TIER 2 — SEMANTIC ALIASES · LIGHT (default)
+
+   Ratios quoted are the MINIMUM across every light background a token can
+   legitimately land on: paper, pure white, bg-subtle and accent-soft.
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* Ground */
+  --bg: var(--algo-paper);
+  --bg-subtle: var(--algo-soft-blue);
+  --surface: var(--algo-surface);
+  /* Light mode elevates with shadow, not tint — paper→white is the only lift
+     the palette allows, and a fourth near-white would be an invented shade. */
+  --surface-raised: var(--algo-surface);
+
+  /* Text */
+  --fg: var(--algo-ink); /* #17243f · min 12.83 */
+  --fg-muted: color-mix(in oklab, var(--algo-muted) 80%, var(--algo-ink)); /* #5a6a83 · min 4.56 */
+
+  /* Lines. `--border` is decorative only (1.19) — anything that is a real UI
+     boundary (inputs, button outlines) must use `--border-strong` to clear the
+     3:1 non-text floor in WCAG 1.4.11.
+     `--border-strong` is raw muted rather than a mix: it is the only palette
+     token that clears 3:1 against every light ground including accent-soft
+     (3.48), so no derivation is needed here. A lighter mix looks tidier on
+     paper and then fails on the tinted panel. */
+  --border: var(--algo-line);
+  --border-strong: var(--algo-muted); /* #6d7d95 · min 3.48 */
+
+  /* Accent. Brand blue at full strength is 4.00 on paper, so the text-safe
+     accent is nudged toward ink. Solid brand blue cannot carry AA text in
+     EITHER label colour (white 4.18 / ink 3.69), which is why the primary CTA
+     is an ink fill, not a blue one. */
+  --accent: color-mix(in oklab, var(--algo-blue) 80%, var(--algo-ink)); /* #3266c3 · min 4.56 */
+  --accent-soft: color-mix(in oklab, var(--algo-blue) 8%, var(--algo-soft-blue)); /* #dfebfe */
+  --accent-contrast: var(--algo-paper); /* label on the primary CTA · 14.79 */
+
+  /* Status. Heavily darkened because the raw greens/ambers are 1.86–3.02 as
+     text on paper. Use the raw palette tokens for fills and indicator dots;
+     use these for anything that is actually read. */
+  --success: color-mix(in oklab, var(--algo-success) 52%, var(--algo-ink)); /* min ≥4.5 */
+  --warning: color-mix(in oklab, var(--algo-warning) 44%, var(--algo-ink)); /* min ≥4.5 */
+  --danger: color-mix(in oklab, var(--algo-danger) 60%, var(--algo-ink)); /* min ≥4.5 */
+
+  /* Focus rings are always solid, never gradient — a ring has to be
+     unambiguous at every point along its path. */
+  --ring: var(--accent);
+
+  /* TIER 3 — GRADIENTS · LIGHT
+     Text sitting on a gradient must clear AA at the gradient's WORST stop, not
+     its average. Each ratio below is that worst stop.
+     Scope rule (CLAUDE.md §4 bans mesh and background washes): gradients carry
+     buttons, panels and hairlines. Never body copy, never a full-section wash,
+     never `background-clip: text` on real content. */
+  --grad-primary: linear-gradient(
+    150deg,
+    var(--algo-ink) 0%,
+    color-mix(in oklab, var(--algo-blue) 18%, var(--algo-navy)) 100%
+  ); /* paper label · worst 12.73 */
+  --grad-surface: linear-gradient(180deg, var(--algo-surface) 0%, var(--algo-soft-blue) 100%); /* fg-muted worst 5.01 */
+  --grad-accent-soft: linear-gradient(160deg, var(--accent-soft) 0%, var(--algo-paper) 100%); /* fg-muted worst 4.56 */
+  --grad-hairline: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--algo-blue) 20%,
+    var(--algo-cyan) 50%,
+    var(--algo-aqua) 80%,
+    transparent 100%
+  ); /* decorative only — never a focus ring, never an input border */
+  /* Reserved for the Phase 2 signature moment. Deliberately unused right now. */
+  --grad-glow: radial-gradient(
+    60% 60% at 50% 0%,
+    color-mix(in srgb, var(--algo-cyan) 18%, transparent) 0%,
+    transparent 70%
+  );
+
+  /* Elevation */
+  --shadow-raised: 0 1px 2px -1px rgb(23 36 63 / 0.08), 0 4px 16px -4px rgb(23 36 63 / 0.1);
+  --shadow-overlay: 0 8px 40px -8px rgb(23 36 63 / 0.18);
+
+  /* Body measure — CLAUDE.md §4 wants line length under 75 characters. */
+  --measure: 68ch;
+}
+
+/* --------------------------------------------------------------------------
+   TIER 2 — SEMANTIC ALIASES · DARK
+
+   Deliberately not an inversion. Light elevates with white + shadow; dark
+   elevates with progressively lighter surfaces, because navy against ink is
+   1.05 — the two raw "dark" tokens are indistinguishable to the eye.
+
+   Selector is bare `[data-theme="dark"]`, not `html[data-theme="dark"]`, so
+   any subtree can be themed independently. That is what lets /styleguide show
+   both themes side by side, and it leaves the door open for a dark-on-light
+   section later without a second token system.
+   -------------------------------------------------------------------------- */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: var(--algo-navy);
+  /* Recessed rather than tinted — in dark, "subtle" means further back. */
+  --bg-subtle: color-mix(in oklab, var(--algo-navy) 88%, #000); /* #0c1a32 */
+  --surface: color-mix(in oklab, var(--algo-navy) 88%, var(--algo-muted)); /* #1a2a45 */
+  --surface-raised: color-mix(in oklab, var(--algo-navy) 78%, var(--algo-muted)); /* #23334e */
+
+  --fg: var(--algo-paper); /* min 12.16 */
+  --fg-muted: color-mix(in oklab, var(--algo-muted) 74%, var(--algo-paper)); /* #909cae · min 4.56 */
+
+  --border: color-mix(in oklab, var(--algo-muted) 26%, var(--algo-navy)); /* #263751 · decorative */
+  --border-strong: color-mix(in oklab, var(--algo-paper) 10%, var(--algo-muted)); /* #7a899f · 3.57 */
+
+  /* Brand blue is 3.89 on navy — unusable as dark text. Sky is 8.81, and
+     CLAUDE.md §4 already designates sky/cyan/aqua as the accent family. */
+  --accent: var(--algo-sky); /* min 6.87 */
+  --accent-soft: color-mix(in oklab, var(--algo-blue) 14%, var(--algo-navy)); /* #152b51 */
+  --accent-contrast: var(--algo-navy); /* label on the sky CTA · 8.81 */
+
+  --success: color-mix(in oklab, var(--algo-success) 88%, var(--algo-paper)); /* #64c293 */
+  --warning: var(--algo-warning); /* #f0ae3c passes as-is on every dark surface */
+  --danger: color-mix(in oklab, var(--algo-danger) 80%, var(--algo-paper));
+
+  --ring: var(--accent);
+
+  /* TIER 3 — GRADIENTS · DARK */
+  --grad-primary: linear-gradient(150deg, var(--algo-sky) 0%, var(--algo-aqua) 100%); /* navy label · worst 8.81 */
+  --grad-surface: linear-gradient(180deg, var(--surface) 0%, var(--surface-raised) 100%); /* fg-muted worst 4.56 */
+  --grad-accent-soft: linear-gradient(160deg, var(--accent-soft) 0%, var(--algo-navy) 100%); /* fg-muted worst 4.69 */
+  --grad-glow: radial-gradient(
+    60% 60% at 50% 0%,
+    color-mix(in srgb, var(--algo-cyan) 22%, transparent) 0%,
+    transparent 70%
+  );
+
+  /* Shadows do almost nothing on a dark ground; lean on surface lift instead
+     and keep these for overlays that need separation from the page. */
+  --shadow-raised: 0 1px 2px -1px rgb(0 0 0 / 0.4), 0 4px 16px -4px rgb(0 0 0 / 0.45);
+  --shadow-overlay: 0 8px 40px -8px rgb(0 0 0 / 0.6);
+}
+
+/* --------------------------------------------------------------------------
+   TIER 4 — TAILWIND EXPOSURE
+
+   `@theme inline` is mandatory here, not stylistic. A plain `@theme` would
+   emit `--color-bg: var(--bg)` into `:root`, which resolves ONCE against the
+   light values and then inherits that computed colour into the dark subtree —
+   the theme switch would silently do nothing. `inline` substitutes at the
+   usage site, so `var(--bg)` re-resolves per theme.
+   -------------------------------------------------------------------------- */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-ring: var(--ring);
+
+  --font-display: var(--font-algo-display), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-algo-body), ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-raised: var(--shadow-raised);
+  --shadow-overlay: var(--shadow-overlay);
+}
+
+/* Type scale — ~1.25 ratio off a 16px base. Tracking tightens as size grows;
+   body sits at 1.6 line-height, display at 1.05. Everything from 3xl up is
+   fluid so 360px never blows out. Literal values, so a plain `@theme`. */
+@theme {
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.6;
+  --text-xs--letter-spacing: 0em;
+
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.6;
+  --text-sm--letter-spacing: 0em;
+
+  --text-base: 1rem;
+  --text-base--line-height: 1.6;
+  --text-base--letter-spacing: 0em;
+
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.5;
+  --text-lg--letter-spacing: -0.005em;
+
+  --text-xl: 1.5625rem;
+  --text-xl--line-height: 1.35;
+  --text-xl--letter-spacing: -0.01em;
+
+  --text-2xl: 1.9531rem;
+  --text-2xl--line-height: 1.2;
+  --text-2xl--letter-spacing: -0.015em;
+
+  --text-3xl: clamp(2rem, 1.6rem + 1.7vw, 2.4414rem);
+  --text-3xl--line-height: 1.15;
+  --text-3xl--letter-spacing: -0.02em;
+
+  --text-4xl: clamp(2.25rem, 1.6rem + 2.9vw, 3.0518rem);
+  --text-4xl--line-height: 1.08;
+  --text-4xl--letter-spacing: -0.025em;
+
+  --text-5xl: clamp(2.5rem, 1.5rem + 4.5vw, 3.8147rem);
+  --text-5xl--line-height: 1.05;
+  --text-5xl--letter-spacing: -0.03em;
+
+  --text-6xl: clamp(2.75rem, 1.2rem + 6.9vw, 4.7684rem);
+  --text-6xl--line-height: 1.05;
+  --text-6xl--letter-spacing: -0.035em;
+}
+
+/* Tailwind v4 has no gradient namespace, so the gradient tier gets explicit
+   utilities. Keeping them named after the token means a component still never
+   writes a colour. */
+@utility bg-grad-primary {
+  background-image: var(--grad-primary);
+}
+@utility bg-grad-surface {
+  background-image: var(--grad-surface);
+}
+@utility bg-grad-accent-soft {
+  background-image: var(--grad-accent-soft);
+}
+@utility bg-grad-glow {
+  background-image: var(--grad-glow);
+}
+/* A 1px accent rule. Decorative by definition — it is never load-bearing for
+   meaning, and never doubles as a focus indicator. */
+@utility rule-accent {
+  block-size: 1px;
+  border: 0;
+  background-image: var(--grad-hairline);
+}
+
+@utility measure {
+  max-inline-size: var(--measure);
+}
+
+/* --------------------------------------------------------------------------
+   BASE
+   -------------------------------------------------------------------------- */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: 1.6;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  /* One visible focus style for the whole site. Solid accent, offset against
+     the current ground so it reads on any surface. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background-color: var(--accent-soft);
+    color: var(--fg);
+  }
+
+  /* Nothing animates in Phase 0 beyond the theme swap, but the guard is here
+     from the start so later phases inherit it rather than bolting it on. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
