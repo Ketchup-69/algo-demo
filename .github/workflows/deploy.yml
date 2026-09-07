@@ -46,6 +46,12 @@ jobs:
         run: touch out/.nojekyll
 
       - uses: actions/configure-pages@v5
+        with:
+          # Creates the Pages site on first run instead of failing with
+          # "Get Pages site failed / Not Found" when Pages has never been
+          # switched on for the repo. Needs the `pages: write` permission
+          # declared above.
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
