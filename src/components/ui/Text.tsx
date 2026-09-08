@@ -7,13 +7,16 @@ const sizes = {
   lg: "text-lg",
 } as const;
 
+/**
+ * No status tones here, deliberately. `--success`, `--warning` and `--danger`
+ * are fills; as coloured text on paper they measure 2.33, 1.86 and 3.02. A
+ * `tone="danger"` option would be a one-word way to ship text that fails AA,
+ * so it does not exist. Use the Status component instead.
+ */
 const tones = {
   default: "text-fg",
   muted: "text-fg-muted",
   accent: "text-accent",
-  success: "text-success",
-  warning: "text-warning",
-  danger: "text-danger",
 } as const;
 
 export type TextSize = keyof typeof sizes;

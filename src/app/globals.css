@@ -87,12 +87,20 @@
   --accent-soft: color-mix(in oklab, var(--algo-blue) 8%, var(--algo-soft-blue)); /* #dfebfe */
   --accent-contrast: var(--algo-paper); /* label on the primary CTA · 14.79 */
 
-  /* Status. Heavily darkened because the raw greens/ambers are 1.86–3.02 as
-     text on paper. Use the raw palette tokens for fills and indicator dots;
-     use these for anything that is actually read. */
-  --success: color-mix(in oklab, var(--algo-success) 52%, var(--algo-ink)); /* min ≥4.5 */
-  --warning: color-mix(in oklab, var(--algo-warning) 44%, var(--algo-ink)); /* min ≥4.5 */
-  --danger: color-mix(in oklab, var(--algo-danger) 60%, var(--algo-ink)); /* min ≥4.5 */
+  /* Status colours are FILLS. They are never coloured text.
+     As text on paper the raw brand values are 2.33 / 1.86 / 3.02 — nowhere
+     near AA, and darkening them enough to pass turned the amber to mud and
+     the coral to brick. As a fill carrying an ink label they are
+     6.35 / 7.96 / 4.90, so the brand colour survives intact.
+     Identical in both themes: one rule, no per-theme asterisk.
+     scripts/check-contrast.mts asserts the fill reading, so breaking this
+     fails the build rather than shipping. */
+  --success: var(--algo-success); /* #48ba86 · ink label 6.35 */
+  --warning: var(--algo-warning); /* #f0ae3c · ink label 7.96 */
+  --danger: var(--algo-danger); /* #e76c54 · ink label 4.90 */
+  /* The label colour for any status fill. Ink clears 4.5 on all three, in
+     both themes, so there is one value rather than a per-theme pair. */
+  --status-contrast: var(--algo-ink);
 
   /* Focus rings are always solid, never gradient — a ring has to be
      unambiguous at every point along its path. */
@@ -167,9 +175,14 @@
   --accent-soft: color-mix(in oklab, var(--algo-blue) 14%, var(--algo-navy)); /* #152b51 */
   --accent-contrast: var(--algo-navy); /* label on the sky CTA · 8.81 */
 
-  --success: color-mix(in oklab, var(--algo-success) 88%, var(--algo-paper)); /* #64c293 */
-  --warning: var(--algo-warning); /* #f0ae3c passes as-is on every dark surface */
-  --danger: color-mix(in oklab, var(--algo-danger) 80%, var(--algo-paper));
+  /* Unchanged from light on purpose. The raw values would pass as text on a
+     dark ground (5.22 / 6.54 / 4.03 on --surface-raised), but a rule that
+     holds in one theme and not the other is a rule components have to think
+     about. These stay fills here too. */
+  --success: var(--algo-success);
+  --warning: var(--algo-warning);
+  --danger: var(--algo-danger);
+  --status-contrast: var(--algo-ink);
 
   --ring: var(--accent);
 
@@ -213,6 +226,7 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+  --color-status-contrast: var(--status-contrast);
   --color-ring: var(--ring);
 
   --font-display: var(--font-algo-display), ui-sans-serif, system-ui, sans-serif;

@@ -4,6 +4,7 @@ import {
   Heading,
   Lede,
   Link,
+  Status,
   Text,
   ThemeToggle,
 } from "@/components/ui";
@@ -120,14 +121,9 @@ export function SystemPreview({ theme }: { theme: ThemeName }) {
         <Block title="Semantic aliases · what components actually use">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {aliasNames.map((name) => {
-              const isText = [
-                "fg",
-                "fg-muted",
-                "accent",
-                "success",
-                "warning",
-                "danger",
-              ].includes(name);
+              // Status tokens are intentionally absent: they are fills, so a
+              // "ratio on bg" reading would describe a usage that is banned.
+              const isText = ["fg", "fg-muted", "accent"].includes(name);
               return (
                 <Swatch
                   key={name}
@@ -257,7 +253,7 @@ export function SystemPreview({ theme }: { theme: ThemeName }) {
           </div>
         </Block>
 
-        <Block title="Links and status text">
+        <Block title="Links and status">
           <div className="flex flex-col gap-2">
             <Text>
               An <Link href="/styleguide">internal link</Link> and a{" "}
@@ -265,17 +261,17 @@ export function SystemPreview({ theme }: { theme: ThemeName }) {
               plus a <Link href="/styleguide" subtle>subtle link</Link> inside a
               paragraph run.
             </Text>
-            <div className="flex flex-wrap gap-4 pt-2">
-              <Text as="span" size="sm" tone="success" measure={false}>
-                Success state
-              </Text>
-              <Text as="span" size="sm" tone="warning" measure={false}>
-                Warning state
-              </Text>
-              <Text as="span" size="sm" tone="danger" measure={false}>
-                Danger state
-              </Text>
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <Status tone="success">Approved</Status>
+              <Status tone="warning">Needs review</Status>
+              <Status tone="danger">Rejected</Status>
+              <Status tone="neutral">Pending</Status>
             </div>
+            <Text tone="muted" size="sm" className="pt-1">
+              Status colours are fills carrying an ink label, never coloured
+              text. As text on paper they measure 1.86–3.02; as fills they are
+              4.90–7.96.
+            </Text>
           </div>
         </Block>
 

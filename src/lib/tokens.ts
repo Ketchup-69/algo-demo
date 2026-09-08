@@ -127,9 +127,10 @@ export const lightAliases = {
   accent: mix(p.blue, p.ink, 80),
   "accent-soft": mix(p.blue, p["soft-blue"], 8),
   "accent-contrast": p.paper,
-  success: mix(p.success, p.ink, 52),
-  warning: mix(p.warning, p.ink, 44),
-  danger: mix(p.danger, p.ink, 60),
+  success: p.success,
+  warning: p.warning,
+  danger: p.danger,
+  "status-contrast": p.ink,
 } as const;
 
 export const darkAliases = {
@@ -144,9 +145,10 @@ export const darkAliases = {
   accent: p.sky,
   "accent-soft": mix(p.blue, p.navy, 14),
   "accent-contrast": p.navy,
-  success: mix(p.success, p.paper, 88),
+  success: p.success,
   warning: p.warning,
-  danger: mix(p.danger, p.paper, 80),
+  danger: p.danger,
+  "status-contrast": p.ink,
 } as const;
 
 export type AliasName = keyof typeof lightAliases;
@@ -169,9 +171,10 @@ export const aliasNotes: Record<AliasName, string> = {
   accent: "Links, focus rings, emphasis",
   "accent-soft": "Tinted panel ground",
   "accent-contrast": "Label sitting on the primary fill",
-  success: "Status text",
-  warning: "Status text",
-  danger: "Status text",
+  success: "Status fill — carries an ink label, never coloured text",
+  warning: "Status fill — carries an ink label, never coloured text",
+  danger: "Status fill — carries an ink label, never coloured text",
+  "status-contrast": "Label colour for any status fill",
 };
 
 /* ------------------------------------------------------ tier 3: gradients -- */
@@ -271,14 +274,10 @@ export function runChecks(): Check[] {
     const t = themes[themeName];
     const grounds = groundsFor(t);
 
-    for (const token of [
-      "fg",
-      "fg-muted",
-      "accent",
-      "success",
-      "warning",
-      "danger",
-    ] as AliasName[]) {
+    // Status colours are deliberately absent here. They are fills, and are
+    // checked below as "label on fill" instead — asserting them as text would
+    // assert the exact property this system gives up on purpose.
+    for (const token of ["fg", "fg-muted", "accent"] as AliasName[]) {
       let worst = Infinity;
       let worstGround = "";
       for (const [groundName, ground] of grounds) {
@@ -296,6 +295,23 @@ export function runChecks(): Check[] {
         actual: worst,
         pass: worst >= FLOOR_TEXT,
         detail: `${round2(worst)} on ${worstGround}`,
+      });
+    }
+
+    // Status colours are fills. What has to be readable is the label sitting
+    // on them, not the colour against the page — as text on paper the raw
+    // brand values are 1.86-3.02 and there is no intention of using them
+    // that way.
+    for (const token of ["success", "warning", "danger"] as AliasName[]) {
+      const r = contrast(t["status-contrast"], t[token]);
+      checks.push({
+        theme: themeName,
+        label: `fill: ${token} + label`,
+        value: t[token],
+        floor: FLOOR_TEXT,
+        actual: r,
+        pass: r >= FLOOR_TEXT,
+        detail: `${round2(r)} label on fill`,
       });
     }
 
