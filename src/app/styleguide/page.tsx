@@ -1,7 +1,14 @@
 // PHASE-3-DELETE: this route is a build-time instrument, not part of the site.
 // It is deleted in Phase 3 along with src/app/styleguide/SystemPreview.tsx.
 import type { Metadata } from "next";
-import { Container, Heading, Lede, Section, Text } from "@/components/ui";
+import {
+  Container,
+  Heading,
+  Lede,
+  Section,
+  Status,
+  Text,
+} from "@/components/ui";
 import { runChecks } from "@/lib/tokens";
 import { SystemPreview } from "./SystemPreview";
 
@@ -62,15 +69,16 @@ export default function StyleguidePage() {
                       {c.detail}
                     </td>
                     <td className="px-4 py-2">
-                      <span
-                        className={
-                          c.pass
-                            ? "rounded px-2 py-0.5 text-xs font-medium text-success"
-                            : "rounded px-2 py-0.5 text-xs font-medium text-danger"
-                        }
+                      {/* Uses Status rather than coloured text on purpose:
+                          `text-success` here would be #48ba86 on white, 2.43:1.
+                          The page that reports the contrast rules should not be
+                          the page breaking them. */}
+                      <Status
+                        tone={c.pass ? "success" : "danger"}
+                        className="text-xs"
                       >
                         {c.pass ? "PASS" : "FAIL"}
-                      </span>
+                      </Status>
                     </td>
                   </tr>
                 ))}
