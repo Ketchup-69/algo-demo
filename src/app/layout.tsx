@@ -12,6 +12,12 @@ export const metadata: Metadata = {
   // PLACEHOLDER: description comes from src/content/site.ts once approved
   description: site.description || undefined,
   ...(site.url ? { metadataBase: new URL(site.url) } : {}),
+  openGraph: {
+    title: site.name,
+    description: site.description,
+    siteName: site.name,
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

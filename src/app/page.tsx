@@ -1,30 +1,45 @@
-import { Container, Heading, Lede, Link, Section, ThemeToggle } from "@/components/ui";
-import { site } from "@/content/site";
+import { Nav, Footer } from "@/components/layout";
+import {
+  Hero,
+  Problem,
+  Agents,
+  HowItWorks,
+  BeyondFinance,
+  Governance,
+  Integrations,
+  Proof,
+  BlogTeaser,
+  Contact,
+} from "@/components/sections";
+import { getAllPosts } from "@/lib/posts";
 
 /**
- * Holding page. Phase 0 builds the system, not the site — every real section
- * arrives in a later phase, and this file gets replaced wholesale when it does.
+ * One continuous page. Every section is anchored so the nav can target it, and
+ * every string comes from `src/content/*` — this file holds no copy at all.
+ *
+ * Nothing here animates. Phase 2 adds the hero sequence and the one signature
+ * scroll moment; all copy already exists in the static HTML, which is the
+ * constraint that keeps it crawlable (§5).
  */
 export default function Home() {
+  const posts = getAllPosts();
+
   return (
-    <main id="main" className="flex flex-1 flex-col justify-center">
-      <Section spacing="lg">
-        <Container width="prose">
-          <div className="mb-10 flex justify-end">
-            <ThemeToggle />
-          </div>
-          <Heading level={1} size="2xl">
-            {site.name}
-          </Heading>
-          <Lede className="mt-5">
-            Foundation only. The design system, tokens and primitives are in
-            place; page content is built in a later phase.
-          </Lede>
-          <p className="mt-8 text-base text-fg-muted">
-            <Link href="/styleguide">View the styleguide</Link>
-          </p>
-        </Container>
-      </Section>
-    </main>
+    <>
+      <Nav />
+      <main id="main">
+        <Hero />
+        <Problem />
+        <Agents />
+        <HowItWorks />
+        <BeyondFinance />
+        <Governance />
+        <Integrations />
+        <Proof />
+        <BlogTeaser posts={posts} />
+        <Contact />
+      </main>
+      <Footer />
+    </>
   );
 }

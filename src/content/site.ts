@@ -3,14 +3,13 @@
  * `src/content/*` — components hold zero hardcoded copy, because the owner
  * edits this weekly without touching JSX (CLAUDE.md §6).
  *
- * Everything here is empty on purpose. Nothing about the company is invented;
- * real values get filled in by the owner. Placeholders are marked with the
- * greppable `PLACEHOLDER:` convention so none of them ship by accident.
+ * Placeholders use the greppable `PLACEHOLDER:` convention. Run
+ * `grep -rn "PLACEHOLDER:" src/content/` before launch to find every one.
  */
 
 export type NavItem = {
   label: string;
-  /** Internal path or in-page anchor. */
+  /** In-page anchor (`#agents`) or a route (`/blog`). */
   href: string;
 };
 
@@ -22,43 +21,87 @@ export type SocialLink = {
 export type SiteConfig = {
   /** The only brand name permitted anywhere on this site (§2). */
   name: string;
-  /** Short descriptor used in metadata. */
   tagline: string;
   description: string;
   /**
    * Single source of truth for the contact address. Every form and every CTA
-   * builds its `mailto:` composer from this one constant (§7).
+   * builds its `mailto:` composer from this one constant (§7). The composer
+   * itself lands in Phase 3.
    */
   contactEmail: string;
-  /** Canonical origin, used for metadata once the domain is decided. */
+  /** Canonical origin. Used for metadata once the domain is decided. */
   url: string;
   nav: NavItem[];
+  /** Repeated in the footer; kept separate so the two can diverge. */
+  footerNav: NavItem[];
+  legalNav: NavItem[];
   social: SocialLink[];
-  /** True while any field above is still filler. */
-  placeholder: boolean;
+  contact: {
+    addressLines: string[];
+    phone: string;
+    email: string;
+  };
+  legalLine: string;
 };
 
 export const site: SiteConfig = {
   name: "Algomotive",
-  // PLACEHOLDER: replace when the owner approves positioning copy
-  tagline: "",
-  // PLACEHOLDER: replace when the owner approves positioning copy
-  description: "",
-  // PLACEHOLDER: replace with the real contact address before launch
-  contactEmail: "",
-  // PLACEHOLDER: replace when the domain is decided (GitHub Pages or custom)
-  url: "",
-  // PLACEHOLDER: replace once the page sections exist to link to
-  nav: [],
-  // PLACEHOLDER: replace when the owner confirms which profiles are public
-  social: [],
-  placeholder: true,
+  tagline: "AI agents for enterprise finance and operations",
+  description:
+    "Algomotive deploys AI agents across payables, receivables, procurement and cash. They read from the systems you already run, prepare the work, and wait for a person to approve it.",
+
+  // PLACEHOLDER: replace with the real inbox before launch
+  contactEmail: "hello@algomotive.example",
+
+  // PLACEHOLDER: replace when the domain is decided (Pages URL or custom domain)
+  url: "https://ketchup-69.github.io/algo-demo",
+
+  nav: [
+    { label: "Agents", href: "#agents" },
+    { label: "How it works", href: "#how-it-works" },
+    { label: "Governance", href: "#governance" },
+    { label: "Blog", href: "/blog" },
+  ],
+
+  footerNav: [
+    { label: "Agents", href: "#agents" },
+    { label: "How it works", href: "#how-it-works" },
+    { label: "Beyond finance", href: "#beyond-finance" },
+    { label: "Governance", href: "#governance" },
+    { label: "Integrations", href: "#integrations" },
+    { label: "Blog", href: "/blog" },
+  ],
+
+  legalNav: [
+    { label: "Privacy", href: "/privacy" },
+    { label: "Terms", href: "/terms" },
+  ],
+
+  // PLACEHOLDER: replace every href once the owner confirms which profiles are
+  // public. Labels are safe; the destinations are not real.
+  social: [
+    { label: "LinkedIn", href: "#" },
+    { label: "X", href: "#" },
+  ],
+
+  // PLACEHOLDER: every value in this block is realistic filler, not real
+  // contact detail. Replace all four before launch.
+  contact: {
+    addressLines: ["Office 1204, Emaar Square Building 3", "Downtown Dubai, United Arab Emirates"],
+    phone: "+971 4 000 0000",
+    email: "hello@algomotive.example",
+  },
+
+  // PLACEHOLDER: confirm the registered entity name and year with the owner
+  legalLine: "© 2026 Algomotive. All rights reserved.",
 };
 
 /**
  * Builds the `mailto:` composer used by every CTA and by the contact form.
- * Returns null when no address is configured yet, so callers can fall back to
- * a copy-to-clipboard line rather than rendering a dead link (§7).
+ * Returns null when no address is configured, so callers can fall back to a
+ * copy-to-clipboard line rather than rendering a dead link (§7).
+ *
+ * Phase 3 wires this to the form. Phase 1 only uses it for plain contact links.
  */
 export function buildMailto(options?: {
   subject?: string;

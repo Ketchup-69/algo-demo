@@ -1,0 +1,11 @@
+export { Hero } from "./Hero";
+export { HeroVisual } from "./HeroVisual";
+export { Problem } from "./Problem";
+export { Agents } from "./Agents";
+export { HowItWorks } from "./HowItWorks";
+export { BeyondFinance } from "./BeyondFinance";
+export { Governance } from "./Governance";
+export { Integrations } from "./Integrations";
+export { Proof } from "./Proof";
+export { BlogTeaser } from "./BlogTeaser";
+export { Contact } from "./Contact";
