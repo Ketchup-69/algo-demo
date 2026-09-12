@@ -46,9 +46,10 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       title={label}
       {...(theme !== null ? { "aria-pressed": theme === "dark" } : {})}
       className={cn(
-        "inline-flex size-9 items-center justify-center rounded-md",
+        "relative inline-flex size-9 items-center justify-center overflow-hidden rounded-md",
         "border border-border-strong bg-surface text-fg-muted",
         "transition-colors duration-150",
+        // The icon swap is the state change; the button itself only needs colour.
         "hover:bg-bg-subtle hover:text-fg",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         className,
@@ -58,7 +59,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       <svg
         aria-hidden="true"
         viewBox="0 0 24 24"
-        className="size-[18px] [[data-theme='dark']_&]:hidden"
+        className="size-[18px] transition-[opacity,transform] duration-200 [[data-theme='dark']_&]:scale-75 [[data-theme='dark']_&]:opacity-0 motion-reduce:transition-none [[data-theme='dark']_&]:absolute"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.75"
@@ -71,7 +72,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       <svg
         aria-hidden="true"
         viewBox="0 0 24 24"
-        className="hidden size-[18px] [[data-theme='dark']_&]:block"
+        className="absolute size-[18px] scale-75 opacity-0 transition-[opacity,transform] duration-200 motion-reduce:transition-none [[data-theme='dark']_&]:relative [[data-theme='dark']_&]:scale-100 [[data-theme='dark']_&]:opacity-100"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.75"

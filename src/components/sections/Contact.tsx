@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { cn } from "@/lib/cn";
 import { Button, Container, Heading, Section, Text } from "@/components/ui";
+import { Reveal } from "@/components/motion";
 import { contact } from "@/content/sections";
 
 type Errors = Partial<Record<string, string>>;
@@ -61,6 +62,7 @@ export function Contact() {
   return (
     <Section id={contact.id} spacing="lg">
       <Container width="wide">
+        <Reveal>
         <div className="grid gap-12 lg:grid-cols-[minmax(0,30ch)_minmax(0,1fr)] lg:gap-20">
           <div>
             <Heading level={2} size="2xl">
@@ -113,10 +115,17 @@ export function Contact() {
                     />
                   )}
 
+                  {/*
+                    The error message answers an action, so it is worth
+                    animating: it appears where the eye already is, and the
+                    movement says "this just changed" rather than "this was
+                    always here". role="alert" is what actually announces it.
+                  */}
                   {error ? (
                     <p
                       id={describedBy}
-                      className="mt-2 text-sm text-fg"
+                      role="alert"
+                      className="motion-safe:animate-field-error mt-2 text-sm text-fg"
                     >
                       {error}
                     </p>
@@ -140,6 +149,7 @@ export function Contact() {
             </p>
           </form>
         </div>
+        </Reveal>
       </Container>
     </Section>
   );

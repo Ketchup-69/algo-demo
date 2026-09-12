@@ -25,6 +25,7 @@ export function HeroVisual() {
   return (
     <div
       data-theme="dark"
+      data-hero-seq="visual"
       className="overflow-hidden rounded-xl border border-border bg-bg"
     >
       <svg
@@ -44,7 +45,7 @@ export function HeroVisual() {
         </defs>
 
         {/* ---- source records: PO, GRN, invoice ---- */}
-        <g data-anim="record" stroke="var(--border-strong)" fill="var(--surface)">
+        <g data-anim="records" stroke="var(--border-strong)" fill="var(--surface)">
           {[64, 172, 280].map((y, i) => (
             <g key={y} data-anim="record" data-index={i}>
               <rect x="32" y={y} width="132" height="76" rx="6" strokeWidth="1" />

@@ -99,13 +99,20 @@ export function MobileNav() {
         </svg>
       </button>
 
+      {/*
+        The sheet answers a tap, so it moves — but only just. It comes up from
+        8px rather than sliding the full height: a full-screen slide is a
+        transition, and this is a disclosure. AnimatePresence keeps the element
+        mounted long enough to leave; focus has already returned to the trigger
+        by then, so the exit is purely visual.
+      */}
       {open ? (
         <div
           ref={sheetRef}
           role="dialog"
           aria-modal="true"
           aria-label="Menu"
-          className="fixed inset-0 z-50 flex flex-col bg-bg lg:hidden"
+          className="motion-safe:animate-sheet-in fixed inset-0 z-50 flex flex-col bg-bg lg:hidden"
         >
           <div className="flex h-16 shrink-0 items-center justify-between px-5 sm:px-6">
             <Logo />

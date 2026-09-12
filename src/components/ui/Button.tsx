@@ -41,7 +41,12 @@ export type ButtonSize = keyof typeof sizes;
 const base = cn(
   "inline-flex items-center justify-center gap-2",
   "rounded-lg font-medium whitespace-nowrap",
-  "transition-[opacity,background-color,color] duration-150",
+  "transition-[opacity,background-color,color,transform] duration-150",
+  // Press feedback. CSS rather than Framer Motion: it is a two-line state
+  // change on an element that may render as <a> or <button>, and wrapping
+  // every button in a motion component to move it 1% would cost more than it
+  // buys. `motion-reduce` opts out for anyone who asked.
+  "active:scale-[0.98] motion-reduce:active:scale-100",
   // The ring is a solid accent, never a gradient — an indicator has to read
   // the same at every point along its path.
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",

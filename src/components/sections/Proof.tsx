@@ -1,4 +1,5 @@
 import { Container, Heading, Section, Status, Text } from "@/components/ui";
+import { Reveal } from "@/components/motion";
 import { proof } from "@/content/sections";
 
 /**
@@ -25,6 +26,7 @@ export function Proof() {
   return (
     <Section id={proof.id} spacing="lg" tone="subtle">
       <Container width="wide">
+        <Reveal>
         <div className="flex flex-wrap items-center gap-4">
           <Heading level={2} size="xl">
             {proof.h2}
@@ -62,6 +64,7 @@ export function Proof() {
             {proof.quote.attribution}
           </figcaption>
         </figure>
+        </Reveal>
       </Container>
     </Section>
   );

@@ -1,10 +1,12 @@
 import { Container, Heading, Section, Text } from "@/components/ui";
+import { Reveal } from "@/components/motion";
 import { problem } from "@/content/sections";
 
 export function Problem() {
   return (
     <Section id={problem.id} spacing="lg" tone="subtle">
       <Container width="wide">
+        <Reveal>
         <Heading level={2} size="2xl" className="max-w-[22ch]">
           {problem.h2}
         </Heading>
@@ -51,6 +53,7 @@ export function Problem() {
             ))}
           </dl>
         </div>
+        </Reveal>
       </Container>
     </Section>
   );

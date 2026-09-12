@@ -1,4 +1,5 @@
 import { Container, Heading, Section, Text } from "@/components/ui";
+import { Reveal } from "@/components/motion";
 import { agents } from "@/content/sections";
 
 /**
@@ -15,6 +16,7 @@ export function Agents() {
   return (
     <Section id={agents.id} spacing="lg">
       <Container width="wide">
+        <Reveal stagger>
         <Heading level={2} size="2xl" className="max-w-[20ch]">
           {agents.h2}
         </Heading>
@@ -28,7 +30,11 @@ export function Agents() {
 
         <ol className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-4">
           {agents.items.map((agent) => (
-            <li key={agent.name} className="flex flex-col bg-bg p-6 pt-8 lg:p-7 lg:pt-9">
+            <li
+              key={agent.name}
+              data-reveal-item
+              className="flex flex-col bg-bg p-6 pt-8 lg:p-7 lg:pt-9"
+            >
               <span className="font-mono text-xs tracking-wider text-accent uppercase">
                 {agent.stage}
               </span>
@@ -45,6 +51,7 @@ export function Agents() {
         <Text tone="muted" className="mt-10 max-w-[62ch]">
           {agents.closing}
         </Text>
+        </Reveal>
       </Container>
     </Section>
   );

@@ -12,10 +12,17 @@ export const THEME_STORAGE_KEY = "algo-theme";
  * the React bundle. Everything is wrapped in try/catch: Safari in private mode
  * throws on `localStorage` access rather than returning null, and CLAUDE.md §2
  * only permits localStorage here if there is a safe fallback.
+ *
+ * It also stamps `class="js"` on <html>. That is what lets the hero load
+ * sequence hide its starting state before first paint WITHOUT hiding anything
+ * from a visitor with JavaScript off — see the `html.js [data-hero-seq]` rule
+ * in globals.css. Both branches set it, including the failure branch: if this
+ * script throws, the page must still behave as a JS page, because React is
+ * about to hydrate regardless.
  */
 export const themeInitScript = `(function(){try{var k=${JSON.stringify(
   THEME_STORAGE_KEY,
-)};var s=null;try{s=window.localStorage.getItem(k)}catch(e){}var t=(s==="light"||s==="dark")?s:(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");var e=document.documentElement;e.setAttribute("data-theme",t);e.style.colorScheme=t}catch(err){var d=document.documentElement;d.setAttribute("data-theme","light");d.style.colorScheme="light"}})();`;
+)};var s=null;try{s=window.localStorage.getItem(k)}catch(e){}var t=(s==="light"||s==="dark")?s:(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");var e=document.documentElement;e.setAttribute("data-theme",t);e.style.colorScheme=t;e.classList.add("js")}catch(err){var d=document.documentElement;d.setAttribute("data-theme","light");d.style.colorScheme="light";d.classList.add("js")}})();`;
 
 /** Read the theme the inline script already committed to the DOM. */
 export function getAppliedTheme(): Theme {

@@ -1,5 +1,6 @@
 import NextLink from "next/link";
 import { Container, Heading, Link, Section, Text } from "@/components/ui";
+import { Reveal } from "@/components/motion";
 import { blogTeaser } from "@/content/sections";
 import { formatDate, type PostMeta } from "@/lib/posts";
 
@@ -9,6 +10,7 @@ export function BlogTeaser({ posts }: { posts: PostMeta[] }) {
   return (
     <Section id={blogTeaser.id} spacing="lg">
       <Container width="wide">
+        <Reveal>
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <Heading level={2} size="xl">
@@ -46,6 +48,7 @@ export function BlogTeaser({ posts }: { posts: PostMeta[] }) {
             </li>
           ))}
         </ul>
+        </Reveal>
       </Container>
     </Section>
   );

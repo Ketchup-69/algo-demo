@@ -1,4 +1,5 @@
 import { Container, Heading, Section, Text } from "@/components/ui";
+import { Reveal } from "@/components/motion";
 import { beyondFinance } from "@/content/sections";
 
 /** A quiet definition list, explicitly not cards — the brief asked for restraint. */
@@ -6,6 +7,7 @@ export function BeyondFinance() {
   return (
     <Section id={beyondFinance.id} spacing="lg">
       <Container width="wide">
+        <Reveal>
         <div className="grid gap-10 lg:grid-cols-[minmax(0,26ch)_minmax(0,1fr)] lg:gap-20">
           <div>
             <Heading level={2} size="xl">
@@ -36,6 +38,7 @@ export function BeyondFinance() {
         <Text tone="muted" className="mt-10 max-w-[62ch]">
           {beyondFinance.closing}
         </Text>
+        </Reveal>
       </Container>
     </Section>
   );

@@ -347,8 +347,31 @@
     color: var(--fg);
   }
 
-  /* Nothing animates in Phase 0 beyond the theme swap, but the guard is here
-     from the start so later phases inherit it rather than bolting it on. */
+  /*
+    Hero load sequence: hide the animated parts so GSAP can bring them in
+    without a flash of the final state first.
+
+    The three conditions matter and are all load-bearing:
+      html.js   - stamped by the pre-paint script, so a visitor with
+                  JavaScript off never has anything hidden from them.
+      no-preference - a visitor who asked for reduced motion sees the final
+                  state immediately, which is what CLAUDE.md §5 requires.
+      opacity   - compositor-only, and the text stays in the DOM and in the
+                  accessibility tree throughout. Nothing is gated (§5).
+
+    If GSAP ever fails to load, this would leave the hero invisible — so the
+    sequence component also clears these inline as its first act, before it
+    builds the timeline.
+  */
+  @media (prefers-reduced-motion: no-preference) {
+    html.js [data-hero-seq] {
+      opacity: 0;
+    }
+  }
+
+  /* Every non-essential animation resolves instantly and renders its final
+     state. GSAP is guarded separately via gsap.matchMedia(), which this rule
+     cannot reach because GSAP writes inline styles. */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -359,4 +382,24 @@
       scroll-behavior: auto !important;
     }
   }
+}
+
+/* Interaction motion, as CSS keyframes rather than a JS animation library.
+   Both are enter-only: an exit animation needs the element kept mounted past
+   its own removal, which is the one thing a library genuinely buys — and not
+   worth 43KB for two fades. `motion-safe:` applies them, so a reduced-motion
+   visitor gets the final state with no keyframes at all. */
+@keyframes sheet-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes field-error {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@utility animate-sheet-in {
+  animation: sheet-in 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+@utility animate-field-error {
+  animation: field-error 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }

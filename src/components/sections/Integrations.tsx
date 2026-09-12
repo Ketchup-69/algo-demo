@@ -1,4 +1,5 @@
 import { Container, Heading, Section, Text } from "@/components/ui";
+import { Reveal } from "@/components/motion";
 import { integrations } from "@/content/sections";
 
 /**
@@ -14,6 +15,7 @@ export function Integrations() {
   return (
     <Section id={integrations.id} spacing="lg">
       <Container width="wide">
+        <Reveal>
         <div className="grid gap-10 lg:grid-cols-[minmax(0,26ch)_minmax(0,1fr)] lg:gap-20">
           <div>
             <Heading level={2} size="xl">
@@ -41,6 +43,7 @@ export function Integrations() {
         <Text tone="muted" className="mt-10 max-w-[62ch]">
           {integrations.closing}
         </Text>
+        </Reveal>
       </Container>
     </Section>
   );

@@ -1,4 +1,5 @@
 import { Container, Heading, Section, Text } from "@/components/ui";
+import { Reveal } from "@/components/motion";
 import { governance } from "@/content/sections";
 
 /**
@@ -10,6 +11,7 @@ export function Governance() {
   return (
     <Section id={governance.id} spacing="lg" tone="accent">
       <Container width="wide">
+        <Reveal>
         <Heading level={2} size="2xl" className="max-w-[20ch]">
           {governance.h2}
         </Heading>
@@ -31,6 +33,7 @@ export function Governance() {
             </div>
           ))}
         </dl>
+        </Reveal>
       </Container>
     </Section>
   );
