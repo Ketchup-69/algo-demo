@@ -25,11 +25,11 @@ export function Problem() {
           </div>
 
           {/*
-            PLACEHOLDER: three filler stat slots. Values are em dashes on purpose
-            so nothing here can be read as a measured result. The Counter is
-            inert until a value contains a number.
+            Three figures that are true by construction of the product (see
+            the content file). Each counts up as it enters the viewport. The
+            definition list is term-then-description in the DOM and drawn
+            figure-first, so a screen reader hears each label once.
             Edit: src/content/sections.ts → problem.stats.items[n]
-            Then set problem.stats.placeholder = false to drop the notice.
           */}
           <div className="mt-16 border-t border-border pt-8 lg:mt-24 lg:pt-10">
             {problem.stats.placeholder ? (
@@ -39,17 +39,14 @@ export function Problem() {
             ) : null}
             <dl className="grid gap-10 sm:grid-cols-3 sm:gap-8" data-reveal="group">
               {problem.stats.items.map((stat) => (
-                <div key={stat.label}>
-                  <dt className="sr-only">{stat.label}</dt>
-                  <dd>
+                <div key={stat.label} className="flex flex-col">
+                  <dt className="order-2 mt-3 max-w-[26ch] text-sm text-fg-muted">{stat.label}</dt>
+                  <dd className="order-1">
                     <Counter
                       value={stat.value}
                       animate={!problem.stats.placeholder}
                       className="block font-display text-5xl font-semibold text-fg tabular-nums"
                     />
-                    <span className="mt-3 block max-w-[24ch] text-sm text-fg-muted">
-                      {stat.label}
-                    </span>
                   </dd>
                 </div>
               ))}

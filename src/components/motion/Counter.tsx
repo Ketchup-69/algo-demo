@@ -19,9 +19,8 @@ gsap.registerPlugin(ScrollTrigger);
  *
  * The final value is in the static HTML. The count-up only rewrites the
  * digits for the duration of the tween and lands on the same string. The
- * digits are padded to the final value's width and the element reserves its
- * final width before the first frame, so the figure never changes size while
- * it counts.
+ * element reserves its final width before the first frame, so the figure
+ * never changes size while it counts.
  */
 export function Counter({
   value,
@@ -46,13 +45,13 @@ export function Counter({
     if (!Number.isFinite(target) || target === 0) return;
     const decimals = (digits.split(".")[1] ?? "").length;
     const grouped = digits.includes(",");
-    const wholeWidth = digits.split(".")[0].replace(/,/g, "").length;
 
+    // No zero-padding: "100%" must not pass through "029%". The element
+    // reserves its final width instead, and the figures are tabular.
     const format = (n: number) => {
       const fixed = n.toFixed(decimals);
       const [whole, frac] = fixed.split(".");
-      const padded = whole.padStart(wholeWidth, "0");
-      const withCommas = grouped ? padded.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : padded;
+      const withCommas = grouped ? whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : whole;
       return frac ? `${withCommas}.${frac}` : withCommas;
     };
 
@@ -65,9 +64,12 @@ export function Counter({
           // right now, so its width is the width to hold.
           el.style.minInlineSize = `${el.getBoundingClientRect().width}px`;
           const state = { n: 0 };
+          // A small figure has few steps to show; give it less time so "3"
+          // does not tick over three values in slow motion.
+          const seconds = Math.min(1.4, 0.5 + Math.log10(Math.max(2, target)) * 0.45);
           gsap.to(state, {
             n: target,
-            duration: 1.4,
+            duration: seconds,
             ease: ease.out,
             scrollTrigger: { trigger: el, start: revealStart, once: true },
             onUpdate: () => {
