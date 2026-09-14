@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import NextLink from "next/link";
-import { Nav, Footer } from "@/components/layout";
-import { Container, Heading, Lede, Section, Text } from "@/components/ui";
+import { Container, Heading, Section, Text } from "@/components/ui";
+import { Reveal } from "@/components/motion";
 import { blogTeaser } from "@/content/sections";
 import { formatDate, getAllPosts } from "@/lib/posts";
 
@@ -14,22 +14,23 @@ export default function BlogIndex() {
   const posts = getAllPosts();
 
   return (
-    <>
-      <Nav />
-      <main id="main">
-        <Section spacing="lg" className="pt-12 sm:pt-16">
-          <Container width="wide">
-            <Heading level={1} size="2xl">
+    <main id="main" className="flex-1">
+      <Section spacing="lg" className="pt-14 sm:pt-20 lg:pt-24">
+        <Container width="wide">
+          <Reveal start="top 100%">
+            <Heading level={1} size="3xl" data-reveal="lines">
               {blogTeaser.h2}
             </Heading>
-            <Lede className="mt-5">{blogTeaser.intro}</Lede>
+            <Text tone="muted" size="lg" className="mt-6 max-w-[52ch]" data-reveal="fade">
+              {blogTeaser.intro}
+            </Text>
 
-            <ul className="mt-14 flex flex-col">
+            <ul className="mt-16 flex flex-col" data-reveal="group">
               {posts.map((post) => (
                 <li key={post.slug} className="border-t border-border last:border-b">
                   <NextLink
                     href={`/blog/${post.slug}`}
-                    className="group grid gap-2 py-7 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:grid-cols-[minmax(0,14ch)_minmax(0,1fr)] sm:gap-8"
+                    className="group grid gap-2 py-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:grid-cols-[minmax(0,16ch)_minmax(0,1fr)] sm:gap-8"
                   >
                     <time
                       dateTime={post.date}
@@ -38,10 +39,10 @@ export default function BlogIndex() {
                       {formatDate(post.date)}
                     </time>
                     <div>
-                      <h2 className="font-display text-xl font-semibold text-fg underline decoration-transparent underline-offset-4 transition-colors group-hover:decoration-accent">
+                      <h2 className="font-display text-2xl font-semibold text-fg underline decoration-transparent underline-offset-4 transition-[text-decoration-color] duration-200 group-hover:decoration-accent">
                         {post.title}
                       </h2>
-                      <Text tone="muted" size="sm" measure={false} className="mt-2 max-w-[62ch]">
+                      <Text tone="muted" measure={false} className="mt-3 max-w-[62ch]">
                         {post.description}
                       </Text>
                     </div>
@@ -49,10 +50,9 @@ export default function BlogIndex() {
                 </li>
               ))}
             </ul>
-          </Container>
-        </Section>
-      </main>
-      <Footer />
-    </>
+          </Reveal>
+        </Container>
+      </Section>
+    </main>
   );
 }

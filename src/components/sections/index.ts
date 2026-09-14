@@ -1,5 +1,5 @@
 export { Hero } from "./Hero";
-export { HeroVisual } from "./HeroVisual";
+export { Logos } from "./Logos";
 export { Problem } from "./Problem";
 export { Agents } from "./Agents";
 export { HowItWorks } from "./HowItWorks";

@@ -13,36 +13,36 @@ import { integrations } from "@/content/sections";
  */
 export function Integrations() {
   return (
-    <Section id={integrations.id} spacing="lg">
+    <Section id={integrations.id} spacing="lg" className="border-t border-border">
       <Container width="wide">
         <Reveal>
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,26ch)_minmax(0,1fr)] lg:gap-20">
-          <div>
-            <Heading level={2} size="xl">
-              {integrations.h2}
-            </Heading>
-            <Text tone="muted" className="mt-5">
-              {integrations.body}
-            </Text>
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-24">
+            <div>
+              <Heading level={2} size="2xl" data-reveal="lines">
+                {integrations.h2}
+              </Heading>
+              <Text tone="muted" size="lg" className="mt-6" data-reveal="fade">
+                {integrations.body}
+              </Text>
+            </div>
+
+            {integrations.showSystems ? (
+              <ul className="flex flex-wrap gap-2.5 self-start lg:pt-2" data-reveal="group">
+                {integrations.systems.map((system) => (
+                  <li
+                    key={system}
+                    className="rounded-full border border-border-strong bg-surface px-4 py-2 font-display text-base text-fg transition-colors duration-200 hover:border-accent"
+                  >
+                    {system}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
 
-          {integrations.showSystems ? (
-            <ul className="grid grid-cols-2 gap-x-8 gap-y-4 self-start sm:grid-cols-3">
-              {integrations.systems.map((system) => (
-                <li
-                  key={system}
-                  className="border-b border-border pb-3 font-display text-base text-fg"
-                >
-                  {system}
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
-
-        <Text tone="muted" className="mt-10 max-w-[62ch]">
-          {integrations.closing}
-        </Text>
+          <Text tone="muted" className="mt-12 max-w-[62ch] lg:ml-[calc(26rem+6rem)]" data-reveal="fade">
+            {integrations.closing}
+          </Text>
         </Reveal>
       </Container>
     </Section>

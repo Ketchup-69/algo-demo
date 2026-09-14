@@ -62,3 +62,12 @@ export function formatDate(iso: string): string {
     timeZone: "UTC",
   }).format(d);
 }
+
+/** Minutes to read, at a deliberately unhurried 200 words a minute. Never 0. */
+export function readingTime(content: string): number {
+  const words = content
+    .replace(/^---[\s\S]*?---/, "")
+    .split(/\s+/)
+    .filter(Boolean).length;
+  return Math.max(1, Math.round(words / 200));
+}
