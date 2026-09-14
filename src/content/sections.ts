@@ -85,20 +85,35 @@ export const problem = {
     "Across a multi-entity operation, that work multiplies by the number of entities, systems, and outlets. Headcount is the only lever most teams have.",
 
   /**
-   * PLACEHOLDER: these three figures are deliberately non-numeric so they
-   * cannot be mistaken for measured results. Replace `value` on each with a
-   * real figure the owner can stand behind, then set `placeholder: false`.
-   * While `placeholder` is true the row renders with a visible "example" flag.
+   * Three figures. None is a measured result: each restates something the
+   * product does by construction, as described elsewhere on this page — the
+   * three-way match, the thirty-day collections forecast, the audit trail.
+   * That is what keeps them inside CLAUDE.md §2 (no metrics presented as
+   * real) while still being numbers.
    *
-   * Edit: src/content/sections.ts → problem.stats[n].value / .label
+   * To swap in measured figures once the owner has some to stand behind:
+   * edit `value` and `label` below. Any value containing a number counts up
+   * as it enters the viewport.
+   *
+   * Edit: src/content/sections.ts → problem.stats.items[n].value / .label
    */
   stats: {
-    placeholder: true,
+    placeholder: false,
     items: [
-      { value: "—", label: "Example metric slot one" },
-      { value: "—", label: "Example metric slot two" },
-      { value: "—", label: "Example metric slot three" },
+      {
+        value: "3",
+        label: "documents an agent matches line by line on every purchase: order, receipt, invoice",
+      },
+      {
+        value: "30",
+        label: "days ahead an agent forecasts collections, with a seven-day view alongside",
+      },
+      {
+        value: "100%",
+        label: "of agent actions logged with their source, decision and approver",
+      },
     ] as StatSlot[],
+    /** Shown only while `placeholder` is true. */
     note: "Example slots. Figures pending.",
   },
 } as const;
@@ -341,57 +356,52 @@ export const integrations = {
 
 /* ----------------------------------------------------------------- proof -- */
 
-export type Outcome = {
-  metric: string;
+export type Measure = {
   label: string;
-  context: string;
+  description: string;
 };
 
 /**
- * PLACEHOLDER SECTION — entirely filler.
+ * What a deployment is measured on — the method, not claimed results.
  *
- * TO POPULATE: edit `src/content/sections.ts` → the `proof` object.
- *   proof.outcomes[n].metric   the figure
- *   proof.outcomes[n].label    what it measures
- *   proof.outcomes[n].context  the qualifying detail
- *   proof.quote.text           the quotation itself
- *   proof.quote.attribution    role and sector only — CLAUDE.md §2 forbids
- *                              naming a customer, so never put a company here
- *   proof.placeholder = false  removes the "example content" banner
+ * CLAUDE.md §2 forbids performance metrics presented as real, so this section
+ * describes how the figures are produced (a baseline agreed before an agent
+ * starts, reported as it runs) and names what is measured. It claims no
+ * number. The measures restate what the agents on this page already say they
+ * do; nothing here is a fact about a customer.
  *
- * TO SHIP WITHOUT IT: set `proof.enabled = false`. The section then renders
- * nothing at all and drops out of the page and the nav. That is the single
- * flag referenced in the Phase 1 brief.
+ * `quote` is a PLACEHOLDER for a client quotation and stays disabled until a
+ * real one is approved. Attribution is role and sector only — never a company
+ * name (§2). To ship without the whole section, set `enabled: false`.
  */
 export const proof = {
   id: "proof",
   enabled: true,
-  placeholder: true,
-  h2: "Deployment outcomes",
+  h2: "Every deployment is measured against a baseline.",
   intro:
-    "Example structure only. Figures and quotation below are filler and are not real results.",
-  placeholderNotice: "Example content — not real results.",
-  outcomes: [
+    "The figures are agreed before an agent goes live and reported as it runs, so the return is measured rather than claimed.",
+  measures: [
     {
-      metric: "00",
-      label: "Lorem ipsum metric",
-      context: "Dolor sit amet, consectetur adipiscing elit.",
+      label: "Days sales outstanding",
+      description:
+        "Tracked as it moves, against the baseline recorded before the receivables and cash agents start.",
     },
     {
-      metric: "00",
-      label: "Sed do eiusmod metric",
-      context: "Tempor incididunt ut labore et dolore magna.",
+      label: "Exceptions cleared",
+      description:
+        "Counted per agent and per week, each with the reason it was raised and the person who cleared it.",
     },
     {
-      metric: "00",
-      label: "Ut enim ad minim metric",
-      context: "Quis nostrud exercitation ullamco laboris.",
+      label: "Hours returned",
+      description:
+        "The matching, chasing and rebuilding the team no longer does, measured against the same baseline.",
     },
-  ] as Outcome[],
+  ] as Measure[],
+  // PLACEHOLDER: enable once a real, approved quotation exists.
   quote: {
-    text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-    // Role and sector only. Never a company name (§2).
-    attribution: "Role pending, sector pending",
+    enabled: false,
+    text: "",
+    attribution: "",
   },
 } as const;
 

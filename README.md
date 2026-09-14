@@ -80,7 +80,7 @@ includes chrome — menu labels, the theme toggle, footer headings — which sit
 `site.ui`.
 
 `grep -rn "PLACEHOLDER" src content` lists everything still to be replaced
-before launch: the contact address, the logo strip, the proof section, the
+before launch: the contact address, the logo strip, the client quotation, the
 legal pages, the social links, the brand mark and the social card.
 
 ## Motion
@@ -167,5 +167,6 @@ commit history.
 | 3 | `mailto:` composer, styleguide removed, sitemap, robots, social card, 404 | Done |
 | 4 | Motion and UI revamp: display type, masked line reveals, live pipeline, sticky process scene, approval console, logo strip, nav, footer, page transitions | Done |
 
-Still placeholders, by design: contact details, logo strip, proof section,
-legal pages, social links, brand mark, blog post.
+Still placeholders, by design: contact details, logo strip, the client
+quotation (disabled), legal pages, social links, brand mark, and the blog post
+(noindex until approved).
