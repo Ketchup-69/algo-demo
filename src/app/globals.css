@@ -451,7 +451,11 @@
   to { opacity: 1; transform: translateY(0); }
 }
 /* A route change. The new page settles in from 8px; the header is not part
-   of the template, so it stays exactly where it was. */
+   of the template, so it stays exactly where it was.
+   Fill mode is `backwards`, not `both`: `both` would leave an identity
+   transform on the wrapper after the animation, which makes it the
+   containing block for every position:fixed descendant — the reading
+   progress line on a post would scroll away with the page. */
 @keyframes page-in {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -471,10 +475,10 @@
   animation: field-error 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @utility animate-page-in {
-  animation: page-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: page-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 @utility animate-panel-in {
-  animation: panel-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: panel-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
 /* --------------------------------------------------------------------------

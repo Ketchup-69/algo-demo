@@ -32,7 +32,7 @@ export function ReadingProgress({ target }: { target: string }) {
       );
     });
     return () => mm.revert();
-  });
+  }, { defer: true });
 
   return (
     <div

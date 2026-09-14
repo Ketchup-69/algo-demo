@@ -1,10 +1,19 @@
 "use client";
 
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { SplitText } from "gsap/SplitText";
 import { duration, ease, stagger, travel } from "@/lib/motion";
 import { useGsapContext } from "./useGsapContext";
 import { linesFrom, revealLines } from "./lines";
+
+gsap.registerPlugin(ScrollTrigger);
+
+const expose = (el: Element | null, shown: boolean) => {
+  if (!el) return;
+  if (shown) el.removeAttribute("aria-hidden");
+  else el.setAttribute("aria-hidden", "true");
+};
 
 /**
  * The one orchestrated hero moment (CLAUDE.md §5). About 1.8s, plays once on
@@ -27,11 +36,10 @@ export function HeroSequence({ children }: { children: React.ReactNode }) {
     let split: SplitText | undefined;
 
     // Reduced motion: clear the CSS guard and stop. The final state is what
-    // the static HTML already contains, so there is nothing to build — and the
-    // header pill should read "approved", which is where the story ends.
+    // the static HTML already contains — the header pill already reads
+    // "approved", which is where the story ends — so there is nothing to build.
     mm.add("(prefers-reduced-motion: reduce)", () => {
       gsap.set("[data-hero-seq]", { clearProps: "opacity" });
-      gsap.set("[data-status='pending']", { opacity: 0 });
       gsap.set("[data-anim='pulse']", { opacity: 0 });
     });
 
@@ -70,12 +78,15 @@ export function HeroSequence({ children }: { children: React.ReactNode }) {
       });
 
       /* ---- the rest of the sentence ---- */
+      // The sub-head starts on the first frame: it is the largest block of
+      // text on screen until the headline's lines have risen, so it is the
+      // page's first contentful-paint candidate and should not wait.
       tl.to("[data-hero-seq='sub']", {
         opacity: 1,
         y: 0,
         duration: duration.slow,
         startAt: { y: travel.sm },
-      }, 0.18)
+      }, 0)
         .to("[data-hero-seq='cta']", {
           opacity: 1,
           y: 0,
@@ -94,8 +105,13 @@ export function HeroSequence({ children }: { children: React.ReactNode }) {
         startAt: { y: travel.lg },
       }, 0.12);
 
-      // Header pill: starts pending, flips at the end.
-      tl.set("[data-status='approved']", { opacity: 0 }, 0);
+      // Header pill: the markup shows approved; rewind it to pending first.
+      // autoAlpha carries visibility with opacity, and aria-hidden follows,
+      // so only one of the two states ever exists for a screen reader.
+      const pendingPill = element.querySelector("[data-status='pending']");
+      const approvedPill = element.querySelector("[data-status='approved']");
+      tl.set(approvedPill, { autoAlpha: 0, onComplete: () => expose(approvedPill, false) }, 0)
+        .set(pendingPill, { autoAlpha: 1, onComplete: () => expose(pendingPill, true) }, 0);
 
       // Records arrive from the left, in order.
       tl.fromTo(
@@ -161,8 +177,8 @@ export function HeroSequence({ children }: { children: React.ReactNode }) {
         );
 
       // The status pill: pending gives way to approved.
-      tl.to("[data-status='pending']", { opacity: 0, duration: 0.25 }, 1.55)
-        .to("[data-status='approved']", { opacity: 1, duration: 0.3 }, 1.6);
+      tl.to(pendingPill, { autoAlpha: 0, duration: 0.25, onComplete: () => expose(pendingPill, false) }, 1.55)
+        .to(approvedPill, { autoAlpha: 1, duration: 0.3, onStart: () => expose(approvedPill, true) }, 1.6);
 
       /*
         Ambient loop. After the intro, three small pulses ride the flow: from a
@@ -171,31 +187,41 @@ export function HeroSequence({ children }: { children: React.ReactNode }) {
         page that moves without being asked, and it is small enough to be felt
         rather than watched.
 
-        Each pulse is a progress value tweened from 0 to 1; on every frame the
-        dot is placed at that fraction of the path's length. That is the whole
-        of MotionPathPlugin's job for a dot on a fixed path, and doing it by
-        hand keeps the plugin's 10KB out of the bundle.
+        Transform only: each path is sampled ONCE into a list of points while
+        layout is clean, and the dot is then translated to the point for the
+        current progress every frame. Reading the path per frame would force a
+        layout each time; MotionPathPlugin would have been 10KB for the same
+        result. The loops pause while the hero is off-screen — an animation
+        nobody can see should not cost a frame.
       */
       const ambient: gsap.core.Timeline[] = [];
       const startAmbient = () => {
         const pulses = gsap.utils.toArray<SVGCircleElement>("[data-anim='pulse']");
         const flows = gsap.utils.toArray<SVGPathElement>("[data-anim='flow'] path");
         const gateLine = element.querySelector<SVGPathElement>("[data-anim='gate-line']");
-        if (!gateLine || pulses.length !== flows.length) return;
+        const visual = element.querySelector("[data-hero-seq='visual']");
+        if (!gateLine || !visual || pulses.length !== flows.length) return;
 
-        const ride = (dot: SVGCircleElement, path: SVGPathElement, seconds: number) => {
+        const SAMPLES = 48;
+        const sample = (path: SVGPathElement) => {
           const length = path.getTotalLength();
+          return Array.from({ length: SAMPLES + 1 }, (_, i) => {
+            const { x, y } = path.getPointAtLength((i / SAMPLES) * length);
+            return { x, y };
+          });
+        };
+        const ride = (dot: SVGCircleElement, points: { x: number; y: number }[], seconds: number) => {
           const state = { p: 0 };
           return gsap.to(state, {
             p: 1,
             duration: seconds,
             onUpdate: () => {
-              const { x, y } = path.getPointAtLength(state.p * length);
-              dot.setAttribute("cx", String(x));
-              dot.setAttribute("cy", String(y));
+              const i = Math.round(state.p * SAMPLES);
+              gsap.set(dot, { x: points[i].x, y: points[i].y });
             },
           });
         };
+        const gatePoints = sample(gateLine);
 
         pulses.forEach((dot, i) => {
           const loop = gsap.timeline({
@@ -207,10 +233,17 @@ export function HeroSequence({ children }: { children: React.ReactNode }) {
           loop
             .set(dot, { opacity: 0 })
             .to(dot, { opacity: 1, duration: 0.2 }, 0)
-            .add(ride(dot, flows[i], 1.1), 0)
-            .add(ride(dot, gateLine, 0.9), 1.1)
+            .add(ride(dot, sample(flows[i]), 1.1), 0)
+            .add(ride(dot, gatePoints, 0.9), 1.1)
             .to(dot, { opacity: 0, duration: 0.25 }, 1.8);
           ambient.push(loop);
+        });
+
+        ScrollTrigger.create({
+          trigger: visual,
+          start: "top bottom",
+          end: "bottom top",
+          onToggle: (self) => ambient.forEach((loop) => loop.paused(!self.isActive)),
         });
       };
 

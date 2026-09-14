@@ -39,6 +39,10 @@ export function ProcessSequence({ children }: { children: React.ReactNode }) {
 
     mm.add("(prefers-reduced-motion: no-preference)", () => {
       const scene = element.querySelector("[data-scene-root]");
+      // A reload that restores a scroll position inside this section, or a
+      // deep link to it, would otherwise hide a scene the reader is looking
+      // at and rebuild it in front of them. Leave the static picture alone.
+      if (scene && scene.getBoundingClientRect().top < window.innerHeight * 0.85) return;
       const steps = gsap.utils.toArray<HTMLElement>("[data-step]", element);
       if (!scene || steps.length < 3) return;
 
@@ -136,7 +140,7 @@ export function ProcessSequence({ children }: { children: React.ReactNode }) {
     });
 
     return () => mm.revert();
-  });
+  }, { defer: true });
 
   return <div ref={scope}>{children}</div>;
 }

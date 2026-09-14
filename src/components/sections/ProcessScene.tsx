@@ -90,13 +90,16 @@ export function ProcessScene() {
               <line x1="262" y1="178" x2="298" y2="178" />
               <line x1="262" y1="186" x2="276" y2="186" />
             </g>
-            <text x="336" y="183" {...label} fill="var(--fg-muted)">
+            <text x="336" y="183" className="max-sm:hidden" {...label} fill="var(--fg-muted)">
               {S.agent}
             </text>
           </g>
 
           {/* ---- the access tag on the read lines ---- */}
-          <g data-scene="read-tag">
+          {/* The two access tags and the small captions are hidden below `sm`,
+              where the drawing is 320px wide and 12px type would be under
+              7px. The aria-label carries the full description regardless. */}
+          <g data-scene="read-tag" className="max-sm:hidden">
             <rect x="330" y="104" width="94" height="24" rx="12" fill="var(--bg)" stroke="var(--algo-sky)" />
             <text x="377" y="120" textAnchor="middle" {...label} fontSize="12" fill="var(--algo-sky)">
               {S.access.read}
@@ -159,8 +162,10 @@ export function ProcessScene() {
               </linearGradient>
             </defs>
             <line data-scene-line="0% 50%" x1="180" y1="360" x2="380" y2="360" />
-            <rect x="214" y="348" width="132" height="24" rx="12" fill="var(--bg)" stroke="var(--border-strong)" />
-            <text x="280" y="364" textAnchor="middle" {...label} fontSize="12" fill="var(--fg-muted)">
+            <rect className="max-sm:hidden" x="214" y="348" width="132" height="24" rx="12" fill="var(--bg)" stroke="var(--border-strong)" />
+            {/* stroke="none": the group's gradient stroke is for the line, and
+                on text it renders as a smeared outline. */}
+            <text className="max-sm:hidden" x="280" y="364" textAnchor="middle" {...label} fontSize="12" fill="var(--fg-muted)" stroke="none">
               {S.access.write}
             </text>
           </g>
@@ -169,7 +174,7 @@ export function ProcessScene() {
             <text x="450" y="356" textAnchor="middle" {...label} fontSize="13">
               {S.record}
             </text>
-            <text x="450" y="374" textAnchor="middle" {...label} fontSize="12" fill="var(--algo-aqua)">
+            <text className="max-sm:hidden" x="450" y="374" textAnchor="middle" {...label} fontSize="12" fill="var(--algo-aqua)">
               {S.approved}
             </text>
           </g>

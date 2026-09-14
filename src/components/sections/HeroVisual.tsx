@@ -18,7 +18,8 @@ import { hero } from "@/content/sections";
  *
  * Nothing in this file moves. HeroSequence drives it through stable hooks:
  *   data-anim = records | flow | match | exception | gate | ledger | pulse
- *   data-status = pending | approved   (the two states of the header pill)
+ *   data-status = pending | approved   (the two states of the header pill;
+ *                 the markup's default is approved, the final state)
  * Add motion by selecting those. Do not restructure the SVG.
  *
  * The header row is HTML rather than SVG text so the title and status stay
@@ -40,10 +41,15 @@ export function HeroVisual() {
         <span className="font-display text-sm font-medium text-fg-muted">
           {V.title}
         </span>
+        {/* Two states, stacked. The markup shows the end of the story
+            (approved); the sequence rewinds to pending before it plays. The
+            hidden one is `invisible` and aria-hidden, not merely transparent,
+            so a screen reader hears one status. */}
         <span className="relative grid text-xs font-medium">
           <span
             data-status="pending"
-            className="col-start-1 row-start-1 inline-flex items-center gap-2 rounded-full border border-warning bg-warning px-2.5 py-0.5 text-status-contrast"
+            aria-hidden="true"
+            className="invisible col-start-1 row-start-1 inline-flex items-center gap-2 rounded-full border border-warning bg-warning px-2.5 py-0.5 text-status-contrast opacity-0"
           >
             <span aria-hidden="true" className="size-1.5 rounded-full bg-status-contrast/70" />
             {V.status.pending}

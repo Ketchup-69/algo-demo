@@ -7,10 +7,11 @@ export const dynamic = "force-static";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = site.url.replace(/\/$/, "");
-  const posts = getAllPosts();
+  // Placeholder posts are noindex, like the legal placeholders, so they
+  // stay out of the sitemap and do not seed anyone's lastmod.
+  const posts = getAllPosts().filter((post) => !post.placeholder);
   const newest = posts[0]?.date ? new Date(posts[0].date) : new Date();
 
-  // Legal pages are noindex while they are placeholders, so they stay out.
   return [
     { url: `${base}/`, lastModified: newest, changeFrequency: "monthly", priority: 1 },
     { url: `${base}/blog/`, lastModified: newest, changeFrequency: "weekly", priority: 0.7 },

@@ -91,18 +91,21 @@ Three treatments, defined once in `src/lib/motion.ts` and applied by
 | `data-reveal` | What | Where |
 |---|---|---|
 | `lines` | Each line rises out of a clipping mask (GSAP SplitText) | Headings |
-| `fade` | Opacity only | Body copy |
-| `rise` / `group` | Opacity plus 14px of travel, staggered inside a group | Lists, rows, panels |
+| `fade` / `group` | Opacity only, staggered inside a group | Body copy, lists, rows |
+| `rise` | Opacity plus 14px of travel | The approval console and the contact form, only |
 | `draw` | Scales in from the left | The one rule in the agents section |
 
 Sections stay server components; `Reveal` is the client wrapper that reads the
-hooks. Nothing is built until a section is within a viewport of the fold, and
-nothing plays twice.
+hooks. Nothing below the fold is built until the hero has had its first frame
+(`afterFirstFrame` in `src/components/motion/refresh.ts`) and the section is
+within a viewport of the fold; anything already on screen when its section is
+built is left exactly as the static HTML has it. Nothing plays twice.
 
 Two places spend the boldness: the hero sequence (`HeroSequence`, ~1.8s, once,
-then three ambient pulses on the pipeline) and the "How it works" scene
-(`ProcessSequence`), which holds still with CSS `position: sticky` and changes
-state as each step reaches the reading line. Neither pins or hijacks the scroll.
+then three ambient pulses on the pipeline that pause while the hero is off
+screen) and the "How it works" scene (`ProcessSequence`), which holds still
+with CSS `position: sticky` and changes state as each step reaches the reading
+line. Neither pins or hijacks the scroll.
 
 The contract every piece of motion keeps:
 
@@ -115,9 +118,17 @@ The contract every piece of motion keeps:
   which kills its tweens and ScrollTriggers together.
 - Transform and opacity only, with one documented exception: the hero's flow
   lines draw with `stroke-dashoffset`, because no transform traces a curve.
+- Nothing animates a layout property. The header keeps one height; the
+  count-up figures reserve their final width before the first digit changes.
+- Anything hidden from the eye is hidden from assistive tech too: the status
+  chips crossfade with `autoAlpha` and toggle `aria-hidden` at the same moment.
 
-The theme toggle runs through the View Transitions API where it exists (a
-circle opening from the button) and is an instant swap everywhere else.
+Smooth scrolling for anchor links is switched on by `refresh.ts` after the
+page has settled, never from the first paint: with it on from the start the
+browser's own jump to a deep link was cancelled by ScrollTrigger's load-time
+measurements and landed short. The theme toggle runs through the View
+Transitions API where it exists (a circle opening from the button) and is an
+instant swap everywhere else.
 
 ## Deploying
 

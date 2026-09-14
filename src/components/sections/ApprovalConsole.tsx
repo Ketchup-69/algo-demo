@@ -17,8 +17,14 @@ const C = governance.console;
  * The one state change it makes is the whole argument of the section: the
  * first row is awaiting approval, then it is approved, and an audit entry
  * appears. That happens once, as the console scrolls into view. The markup's
- * default is the FINAL state (approved, audit shown) so a visitor with
- * JavaScript off or reduced motion reads the finished picture.
+ * default is the FINAL state (approved, audit shown, the pending chip hidden
+ * and out of the accessibility tree) so a visitor with JavaScript off or
+ * reduced motion reads the finished picture, and a screen reader hears one
+ * status, not two.
+ *
+ * The chips crossfade with `autoAlpha`, which sets visibility as well as
+ * opacity, and the sequence toggles `aria-hidden` at the same moments — an
+ * element at opacity 0 is invisible to the eye but still announced.
  *
  * Every identifier is a generic document number (§2). The status chips are
  * fills carrying an ink label, per the token system — never coloured text.
@@ -27,40 +33,51 @@ function chipTone(status: ConsoleRow["status"]) {
   return status === "approved" ? "success" : status === "exception" ? "warning" : "neutral";
 }
 
+const expose = (el: Element | null, shown: boolean) => {
+  if (!el) return;
+  if (shown) el.removeAttribute("aria-hidden");
+  else el.setAttribute("aria-hidden", "true");
+};
+
 export function ApprovalConsole() {
-  const scope = useGsapContext<HTMLDivElement>((_self, element) => {
-    const mm = gsap.matchMedia();
-    mm.add("(prefers-reduced-motion: no-preference)", () => {
-      const rows = gsap.utils.toArray<HTMLElement>("[data-console-row]", element);
-      const pending = element.querySelector("[data-console-flip='pending']");
-      const approved = element.querySelector("[data-console-flip='approved']");
-      const audit = element.querySelector("[data-console-audit]");
-      const auditLines = gsap.utils.toArray<HTMLElement>("[data-console-audit] li", element);
+  const scope = useGsapContext<HTMLDivElement>(
+    (_self, element) => {
+      const mm = gsap.matchMedia();
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        // Already in view (a reload mid-page, a deep link): leave the finished
+        // picture alone rather than hide it in front of the reader.
+        if (element.getBoundingClientRect().top < window.innerHeight * 0.85) return;
 
-      // Starting picture: rows not yet in, first row still pending, no audit.
-      gsap.set(rows, { opacity: 0, y: travel.sm });
-      if (pending && approved) gsap.set(approved, { opacity: 0 });
-      if (pending) gsap.set(pending, { opacity: 1 });
-      if (audit) gsap.set(auditLines, { opacity: 0, y: 6 });
+        const rows = gsap.utils.toArray<HTMLElement>("[data-console-row]", element);
+        const pending = element.querySelector("[data-console-flip='pending']");
+        const approved = element.querySelector("[data-console-flip='approved']");
+        const auditLines = gsap.utils.toArray<HTMLElement>("[data-console-audit] li", element);
 
-      const tl = gsap.timeline({
-        defaults: { ease: ease.out },
-        scrollTrigger: { trigger: element, start: revealStart, once: true },
-      });
-      tl.to(rows, { opacity: 1, y: 0, duration: 0.5, stagger: 0.08 }, 0);
-      if (pending && approved) {
-        tl.to(pending, { opacity: 0, duration: 0.2 }, 1.1).to(
-          approved,
-          { opacity: 1, duration: 0.3 },
-          1.2,
-        );
-      }
-      if (audit) {
+        // Starting picture: rows not yet in, first row still pending, no audit.
+        gsap.set(rows, { opacity: 0, y: travel.sm });
+        if (pending && approved) {
+          gsap.set(pending, { autoAlpha: 1 });
+          gsap.set(approved, { autoAlpha: 0 });
+          expose(pending, true);
+          expose(approved, false);
+        }
+        gsap.set(auditLines, { opacity: 0, y: 6 });
+
+        const tl = gsap.timeline({
+          defaults: { ease: ease.out },
+          scrollTrigger: { trigger: element, start: revealStart, once: true },
+        });
+        tl.to(rows, { opacity: 1, y: 0, duration: 0.5, stagger: 0.08 }, 0);
+        if (pending && approved) {
+          tl.to(pending, { autoAlpha: 0, duration: 0.2, onComplete: () => expose(pending, false) }, 1.1)
+            .to(approved, { autoAlpha: 1, duration: 0.3, onStart: () => expose(approved, true) }, 1.2);
+        }
         tl.to(auditLines, { opacity: 1, y: 0, duration: 0.45, stagger: 0.12 }, 1.35);
-      }
-    });
-    return () => mm.revert();
-  });
+      });
+      return () => mm.revert();
+    },
+    { defer: true },
+  );
 
   return (
     <figure ref={scope} className="flex flex-col gap-3">
@@ -81,7 +98,8 @@ export function ApprovalConsole() {
           <tbody>
             {C.rows.map((row, i) => {
               // The first row is the one that flips. It renders both chips,
-              // stacked, and the sequence crossfades them.
+              // stacked; the markup shows the approved one and the sequence
+              // rewinds it to pending before playing forward.
               const flips = i === 0 && row.status === "pending";
               return (
                 <tr
@@ -100,7 +118,8 @@ export function ApprovalConsole() {
                         <Status
                           tone="neutral"
                           data-console-flip="pending"
-                          className="col-start-1 row-start-1 text-xs"
+                          aria-hidden="true"
+                          className="invisible col-start-1 row-start-1 text-xs opacity-0"
                         >
                           {C.statusLabels.pending}
                         </Status>

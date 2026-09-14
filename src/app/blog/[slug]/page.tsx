@@ -20,11 +20,24 @@ export async function generateMetadata({
   return {
     title: post.meta.title,
     description: post.meta.description,
+    // A placeholder post renders but is not offered to search (see posts.ts).
+    ...(post.meta.placeholder ? { robots: { index: false, follow: true } } : {}),
+    // A nested `openGraph` replaces the layout's wholesale rather than
+    // merging, so the shared fields are repeated here and the social card is
+    // named explicitly (the file convention only applies to the layout).
     openGraph: {
       type: "article",
+      siteName: site.name,
+      locale: "en_GB",
       title: post.meta.title,
       description: post.meta.description,
       publishedTime: post.meta.date,
+      images: ["/opengraph-image.png"],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.meta.title,
+      description: post.meta.description,
     },
   };
 }

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
+import { site } from "@/content/site";
 
 /**
  * Posts are MDX files on disk, read at build time. The site is a static export
@@ -13,6 +14,12 @@ export type PostMeta = {
   /** ISO date, `YYYY-MM-DD`. */
   date: string;
   slug: string;
+  /**
+   * `placeholder: true` in the frontmatter marks filler. Such a post still
+   * renders (the route needs something in it) but is noindex and stays out of
+   * the sitemap, like the legal placeholders.
+   */
+  placeholder: boolean;
 };
 
 const POSTS_DIR = path.join(process.cwd(), "content", "posts");
@@ -23,10 +30,11 @@ function readPostFile(filename: string) {
   const slug = String(data.slug ?? filename.replace(/\.mdx?$/, ""));
   return {
     meta: {
-      title: String(data.title ?? "Untitled"),
+      title: String(data.title ?? site.ui.untitledPost),
       description: String(data.description ?? ""),
       date: String(data.date ?? ""),
       slug,
+      placeholder: data.placeholder === true,
     } satisfies PostMeta,
     content,
   };

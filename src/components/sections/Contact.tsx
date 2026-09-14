@@ -9,6 +9,7 @@ import { buildMailto, site } from "@/content/site";
 
 type Errors = Partial<Record<string, string>>;
 type Composed = { subject: string; body: string; href: string };
+type Copied = "address" | "message" | "failed" | null;
 
 /**
  * The `mailto:` composer (CLAUDE.md §7).
@@ -25,19 +26,30 @@ type Composed = { subject: string; body: string; href: string };
 export function Contact() {
   const [errors, setErrors] = useState<Errors>({});
   const [composed, setComposed] = useState<Composed | null>(null);
-  const [copied, setCopied] = useState<"address" | "message" | null>(null);
+  const [copied, setCopied] = useState<Copied>(null);
   const panelHeading = useRef<HTMLHeadingElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const addressRef = useRef<HTMLElement>(null);
+  const messageRef = useRef<HTMLPreElement>(null);
+  const wasComposed = useRef(false);
 
   // Focus follows the state change: into the panel when it appears, back to
-  // the form's first field when the visitor comes back to edit.
+  // the form's first field when the visitor comes back to edit. The form
+  // stays mounted (hidden) while the panel shows, so what they typed is
+  // still there when they return.
   useEffect(() => {
-    if (composed) panelHeading.current?.focus();
+    if (composed) {
+      panelHeading.current?.focus();
+      wasComposed.current = true;
+    } else if (wasComposed.current) {
+      wasComposed.current = false;
+      formRef.current?.querySelector<HTMLElement>("input, textarea")?.focus();
+    }
   }, [composed]);
 
   useEffect(() => {
     if (!copied) return;
-    const t = window.setTimeout(() => setCopied(null), 2000);
+    const t = window.setTimeout(() => setCopied(null), copied === "failed" ? 4000 : 2000);
     return () => window.clearTimeout(t);
   }, [copied]);
 
@@ -60,9 +72,10 @@ export function Contact() {
 
   function compose(data: FormData): Composed | null {
     const value = (name: string) => String(data.get(name) ?? "").trim();
+    // Function replacers: a "$&" typed into a field is text, not a pattern.
     const subject = contact.subjectTemplate
-      .replace("{name}", value("name"))
-      .replace("{company}", value("company"));
+      .replace("{name}", () => value("name"))
+      .replace("{company}", () => value("company"));
     const body = contact.fields
       .map((field) =>
         field.type === "textarea"
@@ -96,9 +109,20 @@ export function Contact() {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(kind);
+      return;
     } catch {
-      // Clipboard blocked. The text is on screen and selectable; nothing to do.
+      // Clipboard unavailable or refused. Select the text on screen instead
+      // and say so, so the visitor can copy it themselves.
     }
+    const node = kind === "address" ? addressRef.current : messageRef.current;
+    if (node) {
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    }
+    setCopied("failed");
   }
 
   const inputClass = (hasError: boolean) =>
@@ -145,7 +169,7 @@ export function Contact() {
                     <div>
                       <dt className="text-sm font-medium text-fg">{contact.composer.addressLabel}</dt>
                       <dd className="mt-2 flex flex-wrap items-center gap-3">
-                        <code className="rounded-md bg-bg-subtle px-2.5 py-1.5 font-mono text-sm text-fg">
+                        <code ref={addressRef} className="rounded-md bg-bg-subtle px-2.5 py-1.5 font-mono text-sm text-fg">
                           {site.contactEmail}
                         </code>
                         <Button
@@ -160,7 +184,7 @@ export function Contact() {
                     <div>
                       <dt className="text-sm font-medium text-fg">{composed.subject}</dt>
                       <dd className="mt-2">
-                        <pre className="max-h-64 overflow-auto rounded-md bg-bg-subtle px-3.5 py-3 font-body text-sm leading-relaxed whitespace-pre-wrap text-fg-muted">
+                        <pre ref={messageRef} className="max-h-64 overflow-auto rounded-md bg-bg-subtle px-3.5 py-3 font-body text-sm leading-relaxed whitespace-pre-wrap text-fg-muted">
                           {composed.body}
                         </pre>
                         <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -175,12 +199,26 @@ export function Contact() {
                             {contact.composer.edit}
                           </Button>
                         </div>
+                        {copied === "failed" ? (
+                          <p role="status" className="mt-3 text-sm text-fg-muted">
+                            {contact.composer.copyFailed}
+                          </p>
+                        ) : null}
                       </dd>
                     </div>
                   </dl>
                 </div>
-              ) : (
-                <form ref={formRef} noValidate onSubmit={onSubmit} className="flex flex-col gap-5">
+              ) : null}
+              {/* Mounted throughout so typed values survive a round trip to
+                  the panel; `hidden` takes it out of the tab order and the
+                  accessibility tree while the panel is shown. */}
+              <form
+                ref={formRef}
+                noValidate
+                onSubmit={onSubmit}
+                hidden={composed !== null}
+                className="flex flex-col gap-5"
+              >
                   {contact.fields.map((field) => {
                     const error = errors[field.name];
                     const describedBy = error ? `${field.name}-error` : undefined;
@@ -194,7 +232,7 @@ export function Contact() {
                           {field.required ? (
                             <span aria-hidden="true" className="text-fg-muted">
                               {" "}
-                              *
+                              {site.ui.requiredMarker}
                             </span>
                           ) : null}
                         </label>
@@ -247,7 +285,6 @@ export function Contact() {
                     </Text>
                   </div>
                 </form>
-              )}
             </div>
           </div>
         </Reveal>

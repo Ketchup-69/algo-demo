@@ -10,10 +10,13 @@ import { Logo } from "./Logo";
  * the one call to action once more and nothing else that competes with it.
  */
 export function Footer() {
+  // Same rule as the JSON-LD in the layout: a profile exists once it has a URL.
+  const social = site.social.filter((item) => item.href.startsWith("http"));
+
   return (
     <footer className="border-t border-border bg-bg-subtle">
       <Container width="wide" className="py-16 sm:py-20 lg:py-24">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-col items-start gap-8 lg:flex-row lg:items-end lg:justify-between">
           <p className="max-w-[16ch] font-display text-4xl font-semibold tracking-[-0.025em] text-fg text-balance sm:text-5xl">
             {site.tagline}
           </p>
@@ -48,31 +51,38 @@ export function Footer() {
 
           <div>
             <h2 className="text-sm font-semibold text-fg">{site.ui.footerContact}</h2>
-            {/* PLACEHOLDER: address, phone and email are realistic filler.
-                Edit src/content/site.ts → site.contact */}
+            {/* PLACEHOLDER: the address lines say "pending" until the owner
+                fills them in. Edit src/content/site.ts → site.contact */}
             <address className="mt-4 flex flex-col gap-2.5 text-sm text-fg-muted not-italic">
               {site.contact.addressLines.map((line) => (
                 <span key={line}>{line}</span>
               ))}
-              <Link href={`tel:${site.contact.phone.replace(/\s/g, "")}`} external>
-                {site.contact.phone}
-              </Link>
+              {site.contact.phone ? (
+                <Link href={`tel:${site.contact.phone.replace(/\s/g, "")}`} external>
+                  {site.contact.phone}
+                </Link>
+              ) : null}
               <Link href={`mailto:${site.contact.email}`} external>
                 {site.contact.email}
               </Link>
             </address>
 
-            <h2 className="mt-8 text-sm font-semibold text-fg">{site.ui.footerElsewhere}</h2>
-            {/* PLACEHOLDER: hrefs are not real. Edit src/content/site.ts → site.social */}
-            <ul className="mt-4 flex gap-5">
-              {site.social.map((item) => (
-                <li key={item.label}>
-                  <Link href={item.href} external className="text-sm">
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            {/* PLACEHOLDER: only profiles with a real URL render; the block is
+                absent until then. Edit src/content/site.ts → site.social */}
+            {social.length > 0 ? (
+              <>
+                <h2 className="mt-8 text-sm font-semibold text-fg">{site.ui.footerElsewhere}</h2>
+                <ul className="mt-4 flex gap-5">
+                  {social.map((item) => (
+                    <li key={item.label}>
+                      <Link href={item.href} external className="text-sm">
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : null}
           </div>
         </div>
 

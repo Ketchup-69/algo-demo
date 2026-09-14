@@ -50,6 +50,7 @@ export function Proof() {
                 <dd>
                   <Counter
                     value={outcome.metric}
+                    animate={!proof.placeholder}
                     className="font-display text-5xl font-semibold text-fg tabular-nums"
                   />
                 </dd>

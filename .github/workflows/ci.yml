@@ -59,3 +59,6 @@ jobs:
           npm run build
           grep -q '/algo-demo/_next/' out/index.html || { echo "basePath not applied"; exit 1; }
           if grep -q '"/_next/' out/index.html; then echo "found unprefixed /_next/ refs"; exit 1; fi
+          # The social card must carry the base path exactly once.
+          grep -q 'og:image" content="https://ketchup-69.github.io/algo-demo/opengraph-image' out/index.html || { echo "og:image not prefixed once"; exit 1; }
+          if grep -q '/algo-demo/algo-demo/' out/index.html; then echo "basePath applied twice"; exit 1; fi

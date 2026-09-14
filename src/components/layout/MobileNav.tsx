@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import NextLink from "next/link";
 import { cn } from "@/lib/cn";
 import { site } from "@/content/site";
@@ -19,6 +20,16 @@ import { Logo } from "./Logo";
  * and the links arrive one after another beneath it. Enter-only, in CSS: an
  * exit animation needs the node kept mounted past its own removal, which is
  * the one thing a library buys and not worth its weight for this.
+ *
+ * The sheet is portalled to <body>. It is `position: fixed`, and the header
+ * it would otherwise live in has a backdrop-filter once the page scrolls —
+ * which makes the header the containing block for fixed descendants and
+ * clipped the whole menu to the header's 65px.
+ *
+ * Two ways out, two focus destinations. Escape and the close button return
+ * focus to the button that opened the sheet. Choosing a link does not: the
+ * reader has just navigated, so focus goes to the section they chose, and
+ * their next Tab continues from there instead of jumping back to the top.
  */
 export function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -28,6 +39,17 @@ export function MobileNav() {
   const close = useCallback(() => {
     setOpen(false);
     triggerRef.current?.focus();
+  }, []);
+
+  const follow = useCallback((href: string) => {
+    setOpen(false);
+    if (!href.startsWith("/#")) return;
+    const target = document.getElementById(href.slice(2));
+    if (!target) return;
+    // The section is not focusable by default; make it so without adding it
+    // to the Tab sequence, then let the browser's own anchor scroll happen.
+    if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
+    target.focus({ preventScroll: true });
   }, []);
 
   // Lock the page behind the sheet.
@@ -105,7 +127,7 @@ export function MobileNav() {
         </svg>
       </button>
 
-      {open ? (
+      {open ? createPortal(
         <div
           ref={sheetRef}
           role="dialog"
@@ -143,7 +165,7 @@ export function MobileNav() {
               <NextLink
                 key={item.href}
                 href={item.href}
-                onClick={close}
+                onClick={() => follow(item.href)}
                 style={{ animationDelay: `${80 + i * 50}ms` }}
                 className="motion-safe:animate-sheet-item-in border-b border-border py-5 font-display text-3xl font-semibold text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
@@ -154,12 +176,18 @@ export function MobileNav() {
               style={{ animationDelay: `${80 + site.nav.length * 50}ms` }}
               className="motion-safe:animate-sheet-item-in mt-8"
             >
-              <Button href={hero.primaryCta.href} size="lg" className="w-full" onClick={close}>
+              <Button
+                href={hero.primaryCta.href}
+                size="lg"
+                className="w-full"
+                onClick={() => follow(hero.primaryCta.href)}
+              >
                 {hero.primaryCta.label}
               </Button>
             </div>
           </nav>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </>
   );

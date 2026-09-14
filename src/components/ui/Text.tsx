@@ -39,13 +39,18 @@ export function Text<T extends ElementType = "p">({
   ...props
 }: TextProps<T>) {
   const Component = (as ?? "p") as ElementType;
+  // `measure` is a custom utility, so tailwind-merge cannot see that it and a
+  // caller's `max-w-[52ch]` set the same property — and the utility wins by
+  // stylesheet order. An explicit max-w from the caller therefore replaces
+  // the default measure rather than losing to it.
+  const hasOwnMeasure = /\bmax-w-/.test(className ?? "");
   return (
     <Component
       className={cn(
         "font-body",
         sizes[size],
         tones[tone],
-        measure && "measure",
+        measure && !hasOwnMeasure && "measure",
         className,
       )}
       {...props}

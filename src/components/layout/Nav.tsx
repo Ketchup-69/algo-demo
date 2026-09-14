@@ -11,16 +11,16 @@ import { Logo } from "./Logo";
 import { MobileNav } from "./MobileNav";
 
 /**
- * Sticky header. Transparent over the hero; once the page moves it compresses
- * by a few pixels, takes a translucent ground and a hairline. The compression
- * is a height transition on the bar itself, which is the one layout-affecting
- * animation on the site — it is 8px, it happens once, and it is what makes
- * the header feel attached to the scroll rather than stuck on top of it.
+ * Sticky header. Transparent over the hero; once the page moves it takes a
+ * translucent ground and a hairline. The bar's height never changes: a
+ * height transition here would reflow the whole document on every frame and
+ * move everything below it, which §5 rules out.
  *
  * Links know where the reader is. An IntersectionObserver watches the
  * sections the nav points at and marks the current one with `aria-current`;
  * a hairline underneath it grows in from the left. On other routes the
- * pathname decides instead.
+ * pathname decides instead. Anchors are route-qualified ("/#agents") so they
+ * work from every page.
  */
 export function Nav() {
   const pathname = usePathname();
@@ -35,9 +35,9 @@ export function Nav() {
   }, []);
 
   useEffect(() => {
-    const anchors = site.nav.filter((item) => item.href.startsWith("#"));
+    const anchors = site.nav.filter((item) => item.href.startsWith("/#"));
     const targets = anchors
-      .map((item) => document.getElementById(item.href.slice(1)))
+      .map((item) => document.getElementById(item.href.slice(2)))
       .filter((el): el is HTMLElement => el !== null);
     if (targets.length === 0) return;
     // A section is current while it occupies the band just below the header.
@@ -52,7 +52,7 @@ export function Nav() {
           else inBand.delete(entry.target);
         }
         const current = targets.find((t) => inBand.has(t));
-        setActive(current ? `#${current.id}` : null);
+        setActive(current ? `/#${current.id}` : null);
       },
       { rootMargin: "-20% 0px -70% 0px", threshold: 0 },
     );
@@ -62,24 +62,19 @@ export function Nav() {
 
   // Anchor links are only ever current on the page that has the sections.
   const isCurrent = (href: string) =>
-    href.startsWith("#") ? pathname === "/" && active === href : pathname.startsWith(href);
+    href.startsWith("/#") ? pathname === "/" && active === href : pathname.startsWith(href);
 
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 transition-[background-color,border-color,backdrop-filter] duration-300",
+        "sticky top-0 z-40 transition-[background-color,border-color] duration-300",
         solid
           ? "border-b border-border bg-bg/85 backdrop-blur-md"
           : "border-b border-transparent bg-transparent",
       )}
     >
       <Container width="wide">
-        <div
-          className={cn(
-            "flex items-center justify-between gap-4 transition-[height] duration-300 motion-reduce:transition-none",
-            solid ? "h-14" : "h-16",
-          )}
-        >
+        <div className="flex h-16 items-center justify-between gap-4">
           <NextLink
             href="/"
             className="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"

@@ -8,10 +8,11 @@ import { agents } from "@/content/sections";
  * content. These four agents are not a menu of parallel options; they are four
  * consecutive stages of one money cycle: commit, pay, collect, measure.
  *
- * So they are drawn as a spine. A single rule runs through all four and draws
- * itself in as the section arrives; each stage is a node on it, marked by a
- * dot where it meets the rule. On small screens the grid stacks and the rule
- * still runs across the top, so the structure holds.
+ * So they are drawn as a spine. At desktop width a single rule runs through
+ * all four and draws itself in as the section arrives; each stage is a node
+ * on it, marked by a dot where it meets the rule. Below that, where the four
+ * wrap into rows, each stage carries its own hairline and the dot sits on it
+ * — the same drawing, one row at a time.
  */
 export function Agents() {
   return (
@@ -30,18 +31,19 @@ export function Agents() {
           {/* One rule across all four, not one per column — the point is that
               this is a single cycle, and four separate gradients would say the
               opposite. It draws in from the left. */}
-          <hr aria-hidden="true" className="rule-accent mt-16 lg:mt-24" data-reveal="draw" />
+          <hr aria-hidden="true" className="rule-accent mt-16 hidden lg:mt-24 lg:block" data-reveal="draw" />
 
-          <ol className="grid sm:grid-cols-2 lg:grid-cols-4" data-reveal="group">
+          <ol className="mt-14 grid gap-x-8 sm:grid-cols-2 lg:mt-0 lg:grid-cols-4 lg:gap-x-10" data-reveal="group">
             {agents.items.map((agent) => (
               <li
                 key={agent.name}
-                className="group relative flex flex-col border-b border-border py-8 pr-6 last:border-b-0 sm:border-b-0 sm:border-r sm:pl-6 sm:last:border-r-0 sm:first:pl-0 lg:py-10"
+                className="group relative flex flex-col border-t border-border py-8 pr-4 lg:border-t-0 lg:py-10"
               >
-                {/* The node: sits on the rule and brightens on hover. */}
+                {/* The node: sits on the rule (its own below lg, the shared one
+                    at lg) and brightens on hover. */}
                 <span
                   aria-hidden="true"
-                  className="absolute -top-[5px] left-0 size-[9px] rounded-full border-2 border-accent bg-bg transition-colors duration-200 group-hover:bg-accent sm:left-6 sm:first:left-0"
+                  className="absolute -top-[5px] left-0 size-[9px] rounded-full border-2 border-accent bg-bg transition-colors duration-200 group-hover:bg-accent"
                 />
                 <span className="text-sm font-medium text-accent">{agent.stage}</span>
                 <h3 className="mt-3 font-display text-xl font-semibold text-fg">

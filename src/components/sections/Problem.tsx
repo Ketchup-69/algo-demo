@@ -44,6 +44,7 @@ export function Problem() {
                   <dd>
                     <Counter
                       value={stat.value}
+                      animate={!problem.stats.placeholder}
                       className="block font-display text-5xl font-semibold text-fg tabular-nums"
                     />
                     <span className="mt-3 block max-w-[24ch] text-sm text-fg-muted">

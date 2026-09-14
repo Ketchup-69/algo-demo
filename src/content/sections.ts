@@ -13,8 +13,8 @@ export const hero = {
   id: "hero",
   h1: "AI agents that work inside the systems your finance team already uses.",
   sub: "Algomotive deploys agents across payables, receivables, procurement and cash. They read from your ERP, prepare the work, and wait for a person to approve it.",
-  primaryCta: { label: "Talk to us", href: "#contact" },
-  secondaryCta: { label: "See how it works", href: "#how-it-works" },
+  primaryCta: { label: "Talk to us", href: "/#contact" },
+  secondaryCta: { label: "See how it works", href: "/#how-it-works" },
   supporting: "Compliant AI agents for regulated enterprises.",
   /** Accessible description of the hero diagram, for screen readers. */
   visualAlt:
@@ -441,6 +441,8 @@ export const contact = {
     copyAddress: "Copy address",
     copyMessage: "Copy message",
     copied: "Copied",
+    /** Shown when the clipboard is unavailable; the text is selected instead. */
+    copyFailed: "Selected. Copy it with your keyboard.",
     edit: "Edit the message",
   },
   errors: {

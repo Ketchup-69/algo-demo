@@ -36,7 +36,10 @@ export type SiteConfig = {
   legalNav: NavItem[];
   social: SocialLink[];
   contact: {
+    /** True while the lines below are filler rather than a real address. */
+    placeholder: boolean;
     addressLines: string[];
+    /** Empty string when not yet confirmed; the footer omits it. */
     phone: string;
     email: string;
   };
@@ -60,6 +63,10 @@ export type SiteConfig = {
     backToTop: string;
     backToWriting: string;
     readingTime: (minutes: number) => string;
+    /** The mark after a required form label. */
+    requiredMarker: string;
+    /** Title for a post whose frontmatter has none. */
+    untitledPost: string;
   };
 };
 
@@ -75,19 +82,21 @@ export const site: SiteConfig = {
   // PLACEHOLDER: replace when the domain is decided (Pages URL or custom domain)
   url: "https://ketchup-69.github.io/algo-demo",
 
+  // Anchors are route-qualified ("/#agents", not "#agents") so they resolve
+  // from the blog, the legal pages and the 404 as well as from the home page.
   nav: [
-    { label: "Agents", href: "#agents" },
-    { label: "How it works", href: "#how-it-works" },
-    { label: "Governance", href: "#governance" },
+    { label: "Agents", href: "/#agents" },
+    { label: "How it works", href: "/#how-it-works" },
+    { label: "Governance", href: "/#governance" },
     { label: "Blog", href: "/blog" },
   ],
 
   footerNav: [
-    { label: "Agents", href: "#agents" },
-    { label: "How it works", href: "#how-it-works" },
-    { label: "Beyond finance", href: "#beyond-finance" },
-    { label: "Governance", href: "#governance" },
-    { label: "Integrations", href: "#integrations" },
+    { label: "Agents", href: "/#agents" },
+    { label: "How it works", href: "/#how-it-works" },
+    { label: "Beyond finance", href: "/#beyond-finance" },
+    { label: "Governance", href: "/#governance" },
+    { label: "Integrations", href: "/#integrations" },
     { label: "Blog", href: "/blog" },
   ],
 
@@ -103,18 +112,21 @@ export const site: SiteConfig = {
     { label: "X", href: "#" },
   ],
 
-  // PLACEHOLDER: every value in this block is realistic filler, not real
-  // contact detail. Replace all four before launch.
+  // PLACEHOLDER: no real contact detail is known yet. The lines say so on the
+  // page. Nothing here may name a building, a landlord or any other company
+  // (§2). Fill in the real address and phone, then set `placeholder: false`.
   contact: {
-    addressLines: ["Office 1204, Emaar Square Building 3", "Downtown Dubai, United Arab Emirates"],
-    phone: "+971 4 000 0000",
+    placeholder: true,
+    addressLines: ["Office address pending", "Dubai, United Arab Emirates"],
+    /** Empty until confirmed: the footer omits the phone line while it is. */
+    phone: "",
     email: "hello@algomotive.example",
   },
 
   // PLACEHOLDER: confirm the registered entity name and year with the owner
   legalLine: "© 2026 Algomotive. All rights reserved.",
 
-  footerCta: { label: "Start a conversation", href: "#contact" },
+  footerCta: { label: "Start a conversation", href: "/#contact" },
 
   ui: {
     skipToContent: "Skip to content",
@@ -133,6 +145,8 @@ export const site: SiteConfig = {
     backToTop: "Back to top",
     backToWriting: "Back to writing",
     readingTime: (minutes) => `${minutes} min read`,
+    requiredMarker: "*",
+    untitledPost: "Untitled",
   },
 };
 

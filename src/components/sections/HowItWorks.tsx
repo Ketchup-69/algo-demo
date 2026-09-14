@@ -30,11 +30,19 @@ export function HowItWorks() {
             {/* The scene. Sticky in both axes: top on small screens, in its
                 column on large ones. The wrapper carries the section's ground
                 so the steps disappear cleanly beneath it on mobile. */}
+            {/* `lg:self-start` is load-bearing: a grid item stretches to the
+                row by default, and a sticky element as tall as its container
+                has nowhere to travel. `top-[65px]` is the header (h-16 plus
+                its hairline), so no strip of copy shows between the two. */}
             <div
               data-scene-root
-              className="sticky top-16 z-10 -mx-5 bg-bg-subtle px-5 pt-3 pb-4 sm:-mx-6 sm:px-6 lg:order-2 lg:top-28 lg:mx-0 lg:bg-transparent lg:p-0"
+              className="sticky top-[65px] z-10 -mx-5 bg-bg-subtle px-5 pt-3 pb-4 sm:-mx-6 sm:px-6 lg:order-2 lg:top-28 lg:mx-0 lg:self-start lg:bg-transparent lg:p-0"
             >
-              <ProcessScene />
+              {/* On tablets the panel is capped so the steps keep room to be
+                  read beneath it. */}
+              <div className="sm:max-lg:mx-auto sm:max-lg:max-w-lg">
+                <ProcessScene />
+              </div>
             </div>
 
             <div className="relative lg:order-1" data-step-list>

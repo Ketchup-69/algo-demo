@@ -12,7 +12,10 @@ export const metadata: Metadata = {
   },
   // PLACEHOLDER: description comes from src/content/site.ts once approved
   description: site.description || undefined,
-  ...(site.url ? { metadataBase: new URL(site.url) } : {}),
+  // The ORIGIN only. Next prefixes basePath onto the social-card path itself,
+  // so a metadataBase that already carried "/algo-demo" doubled it up in the
+  // deployed og:image URL.
+  ...(site.url ? { metadataBase: new URL(new URL(site.url).origin) } : {}),
   openGraph: {
     title: site.name,
     description: site.description,
@@ -62,7 +65,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       id="top"
       suppressHydrationWarning
-      className={`${fontVariables} h-full scroll-smooth antialiased motion-reduce:scroll-auto`}
+      // Smooth anchor scrolling is switched on by refresh.ts once the page has
+      // settled: with it on from the start, the browser's own smooth jump to
+      // a deep link (/#contact) was cancelled mid-flight by ScrollTrigger's
+      // load-time measurements and landed hundreds of pixels short.
+      className={`${fontVariables} h-full antialiased`}
     >
       <head>
         <ThemeScript />
