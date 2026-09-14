@@ -3,9 +3,9 @@
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { SplitText } from "gsap/SplitText";
-import { duration, ease, stagger, travel } from "@/lib/motion";
+import { ease, stagger, travel } from "@/lib/motion";
 import { useGsapContext } from "./useGsapContext";
-import { linesFrom, revealLines } from "./lines";
+import { revealWords, revealWordsSoft, wordsFrom } from "./lines";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -33,7 +33,7 @@ const expose = (el: Element | null, shown: boolean) => {
 export function HeroSequence({ children }: { children: React.ReactNode }) {
   const scope = useGsapContext<HTMLDivElement>((_self, element) => {
     const mm = gsap.matchMedia();
-    let split: SplitText | undefined;
+    const splits: SplitText[] = [];
 
     // Reduced motion: clear the CSS guard and stop. The final state is what
     // the static HTML already contains — the header pill already reads
@@ -49,14 +49,32 @@ export function HeroSequence({ children }: { children: React.ReactNode }) {
       // invisible — so this is the first act, not a side effect of a tween.
       gsap.set("[data-hero-seq]", { opacity: 0 });
 
-      /* ---- the headline: masked lines, on the same clock as everything else ---- */
+      /* ---- the headline: words rising out of masked lines, one gesture ---- */
       const headline = element.querySelector<HTMLElement>("[data-hero-seq='headline']");
       if (headline) {
-        // The lines start below their masks, so the heading itself can be
+        // The words start below their line masks, so the heading itself can be
         // fully opaque from the first frame. autoSplit rebuilds this tween
         // (at the same progress) if the font swaps in late.
         gsap.set(headline, { opacity: 1 });
-        split = revealLines(headline, (lines) => linesFrom(lines));
+        splits.push(revealWords(headline, (words) => wordsFrom(words)));
+      }
+
+      /* ---- the sub-head: word by word, a beat behind the headline ---- */
+      const sub = element.querySelector<HTMLElement>("[data-hero-seq='sub']");
+      if (sub) {
+        gsap.set(sub, { opacity: 1 });
+        splits.push(
+          revealWordsSoft(sub, (words) =>
+            gsap.from(words, {
+              opacity: 0,
+              y: 10,
+              duration: 0.7,
+              ease: ease.out,
+              stagger: 0.018,
+              delay: 0.35,
+            }),
+          ),
+        );
       }
 
       const tl = gsap.timeline({
@@ -69,7 +87,7 @@ export function HeroSequence({ children }: { children: React.ReactNode }) {
           // clearing opacity hands control back to the `html.js [data-hero-seq]`
           // rule in globals.css, which sets opacity 0. The hero animated in and
           // then disappeared. The inline 1 has to outlive the timeline.
-          gsap.set("[data-hero-seq]:not([data-hero-seq='headline'])", {
+          gsap.set("[data-hero-seq]:not([data-hero-seq='headline']):not([data-hero-seq='sub'])", {
             clearProps: "transform",
             opacity: 1,
           });
@@ -78,16 +96,7 @@ export function HeroSequence({ children }: { children: React.ReactNode }) {
       });
 
       /* ---- the rest of the sentence ---- */
-      // The sub-head starts on the first frame: it is the largest block of
-      // text on screen until the headline's lines have risen, so it is the
-      // page's first contentful-paint candidate and should not wait.
-      tl.to("[data-hero-seq='sub']", {
-        opacity: 1,
-        y: 0,
-        duration: duration.slow,
-        startAt: { y: travel.sm },
-      }, 0)
-        .to("[data-hero-seq='cta']", {
+      tl.to("[data-hero-seq='cta']", {
           opacity: 1,
           y: 0,
           duration: 0.5,
@@ -195,12 +204,23 @@ export function HeroSequence({ children }: { children: React.ReactNode }) {
         nobody can see should not cost a frame.
       */
       const ambient: gsap.core.Timeline[] = [];
+      let resize: ResizeObserver | undefined;
       const startAmbient = () => {
-        const pulses = gsap.utils.toArray<SVGCircleElement>("[data-anim='pulse']");
+        const pulses = gsap.utils.toArray<HTMLElement>("[data-anim='pulse']");
         const flows = gsap.utils.toArray<SVGPathElement>("[data-anim='flow'] path");
         const gateLine = element.querySelector<SVGPathElement>("[data-anim='gate-line']");
         const visual = element.querySelector("[data-hero-seq='visual']");
-        if (!gateLine || !visual || pulses.length !== flows.length) return;
+        const svg = gateLine?.ownerSVGElement;
+        if (!gateLine || !visual || !svg || pulses.length !== flows.length) return;
+
+        // viewBox units → pixels. The SVG keeps its aspect ratio, so one
+        // factor serves both axes; re-measured when the panel resizes.
+        const VIEW_W = 960;
+        let scale = svg.getBoundingClientRect().width / VIEW_W;
+        resize = new ResizeObserver(() => {
+          scale = svg.getBoundingClientRect().width / VIEW_W;
+        });
+        resize.observe(svg);
 
         const SAMPLES = 48;
         const sample = (path: SVGPathElement) => {
@@ -210,20 +230,20 @@ export function HeroSequence({ children }: { children: React.ReactNode }) {
             return { x, y };
           });
         };
-        const ride = (dot: SVGCircleElement, points: { x: number; y: number }[], seconds: number) => {
+        const ride = (dot: HTMLElement, points: { x: number; y: number }[], seconds: number) => {
           const state = { p: 0 };
           return gsap.to(state, {
             p: 1,
             duration: seconds,
             onUpdate: () => {
               const i = Math.round(state.p * SAMPLES);
-              gsap.set(dot, { x: points[i].x, y: points[i].y });
+              dot.style.transform = `translate3d(${points[i].x * scale}px, ${points[i].y * scale}px, 0)`;
             },
           });
         };
         const gatePoints = sample(gateLine);
 
-        pulses.forEach((dot, i) => {
+        pulses.forEach((dot: HTMLElement, i) => {
           const loop = gsap.timeline({
             repeat: -1,
             repeatDelay: 3.2,
@@ -250,11 +270,12 @@ export function HeroSequence({ children }: { children: React.ReactNode }) {
       return () => {
         tl.kill();
         ambient.forEach((a) => a.kill());
+        resize?.disconnect();
       };
     });
 
     return () => {
-      split?.revert();
+      splits.forEach((s) => s.revert());
       mm.revert();
     };
   });

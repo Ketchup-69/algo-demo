@@ -9,22 +9,20 @@ import { hero } from "@/content/sections";
  * That is literally the product, drawn — and it is labelled, because the
  * labels are the product's vocabulary.
  *
- * The figure keeps a dark ground in BOTH themes via `data-theme="dark"` on the
- * wrapper. Sky, cyan and aqua are the designated accent family for this visual,
- * and on paper they measure 1.54–1.96 — unusable. On ink they are 8.36–10.14.
- * The token layer scopes its dark aliases to a bare attribute selector rather
- * than to <html>, so the figure can hold that ground while still referencing
- * only semantic aliases. No hex anywhere here.
+ * It follows the theme. The card is a surface in both; strokes and beams come
+ * through the `--flow-*` tokens, which mix the accent family toward blue and
+ * ink on paper and use it raw on navy — so the drawing is the same drawing in
+ * both, at the contrast each ground needs. No hex anywhere here.
  *
  * Nothing in this file moves. HeroSequence drives it through stable hooks:
  *   data-anim = records | flow | match | exception | gate | ledger | pulse
  *   data-status = pending | approved   (the two states of the header pill;
  *                 the markup's default is approved, the final state)
- * Add motion by selecting those. Do not restructure the SVG.
+ * The border light is CSS (`.border-beam`) and needs nothing from JS.
  *
- * The header row is HTML rather than SVG text so the title and status stay
- * crisp and correctly sized at every width. Inside the SVG, labels scale with
- * the drawing and are hidden below `sm`, where they would be under 6px.
+ * The header row is HTML so the title and status stay crisp at every width.
+ * Inside the SVG, labels scale with the drawing and are hidden below `sm`,
+ * where they would be under 6px.
  */
 const V = hero.visual;
 const RECORD_Y = [48, 166, 284] as const;
@@ -32,10 +30,11 @@ const RECORD_Y = [48, 166, 284] as const;
 export function HeroVisual() {
   return (
     <div
-      data-theme="dark"
       data-hero-seq="visual"
-      className="relative overflow-hidden rounded-2xl border border-border bg-bg text-fg shadow-overlay"
+      className="relative overflow-hidden rounded-2xl border border-border bg-surface text-fg shadow-overlay [--beam-radius:16px]"
     >
+      <span aria-hidden="true" className="border-beam" />
+
       {/* Panel header: what this is, and where it stands. */}
       <div className="flex items-center justify-between gap-4 border-b border-border px-4 py-3 sm:px-6">
         <span className="font-display text-sm font-medium text-fg-muted">
@@ -64,7 +63,21 @@ export function HeroVisual() {
         </span>
       </div>
 
-      <div className="bg-dot-grid">
+      <div className="bg-dot-grid relative">
+        {/* The ambient pulses: HTML dots over the drawing, moved with a
+            composited transform. An SVG circle would relayout the drawing on
+            every frame; these cost nothing on the main thread. Positions are
+            computed by HeroSequence from the paths below. */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          {RECORD_Y.map((y) => (
+            <span
+              key={y}
+              data-anim="pulse"
+              className="absolute top-0 left-0 size-2 rounded-full bg-[color:var(--pulse)] opacity-0 will-change-transform"
+              style={{ marginTop: "-4px", marginLeft: "-4px" }}
+            />
+          ))}
+        </div>
         <svg
           viewBox="0 0 960 420"
           role="img"
@@ -73,16 +86,15 @@ export function HeroVisual() {
           preserveAspectRatio="xMidYMid meet"
         >
           <defs>
-            {/* The accent family, used only here and in state changes (§4). */}
             <linearGradient id="algo-flow" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="var(--algo-blue)" />
-              <stop offset="50%" stopColor="var(--algo-cyan)" />
-              <stop offset="100%" stopColor="var(--algo-aqua)" />
+              <stop offset="0%" stopColor="var(--flow-1)" />
+              <stop offset="50%" stopColor="var(--flow-2)" />
+              <stop offset="100%" stopColor="var(--flow-3)" />
             </linearGradient>
           </defs>
 
           {/* ---- source records: purchase order, goods received, invoice ---- */}
-          <g data-anim="records" stroke="var(--border-strong)" fill="var(--surface)">
+          <g data-anim="records" stroke="var(--border-strong)" fill="var(--bg)">
             {RECORD_Y.map((y, i) => (
               <g key={y} data-anim="record" data-index={i}>
                 <rect x="48" y={y} width="168" height="88" rx="8" strokeWidth="1" />
@@ -103,7 +115,7 @@ export function HeroVisual() {
                   y1={y + 50}
                   x2="128"
                   y2={y + 50}
-                  stroke="var(--algo-sky)"
+                  stroke="var(--flow-1)"
                   strokeWidth="2"
                   strokeLinecap="round"
                 />
@@ -143,14 +155,14 @@ export function HeroVisual() {
               width="88"
               height="88"
               rx="8"
-              fill="var(--surface-raised)"
-              stroke="var(--algo-cyan)"
+              fill="var(--accent-soft)"
+              stroke="var(--flow-2)"
               strokeWidth="1.5"
             />
             <path
               d="M428 210 l11 11 l24 -26"
               fill="none"
-              stroke="var(--algo-aqua)"
+              stroke="var(--flow-3)"
               strokeWidth="2.25"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -174,7 +186,7 @@ export function HeroVisual() {
             <path
               d="M444 254 C 444 320, 470 360, 540 360"
               fill="none"
-              stroke="var(--algo-warning)"
+              stroke="var(--flow-warn)"
               strokeWidth="1.5"
               strokeDasharray="4 5"
               strokeLinecap="round"
@@ -185,8 +197,8 @@ export function HeroVisual() {
               width="140"
               height="48"
               rx="8"
-              fill="var(--surface)"
-              stroke="var(--algo-warning)"
+              fill="var(--bg)"
+              stroke="var(--flow-warn)"
               strokeWidth="1.5"
             />
             <text
@@ -206,7 +218,7 @@ export function HeroVisual() {
               y1="360"
               x2="620"
               y2="360"
-              stroke="var(--algo-warning)"
+              stroke="var(--flow-warn)"
               strokeWidth="2"
               strokeLinecap="round"
             />
@@ -219,7 +231,7 @@ export function HeroVisual() {
               y1="150"
               x2="660"
               y2="270"
-              stroke="var(--algo-sky)"
+              stroke="var(--flow-1)"
               strokeWidth="2"
               strokeLinecap="round"
             />
@@ -227,14 +239,14 @@ export function HeroVisual() {
               cx="660"
               cy="210"
               r="15"
-              fill="var(--bg)"
-              stroke="var(--algo-sky)"
+              fill="var(--surface)"
+              stroke="var(--flow-1)"
               strokeWidth="2"
             />
             <path
               d="M653 210 l5 5 l10 -11"
               fill="none"
-              stroke="var(--algo-aqua)"
+              stroke="var(--flow-3)"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -261,7 +273,7 @@ export function HeroVisual() {
               width="132"
               height="120"
               rx="8"
-              fill="var(--surface)"
+              fill="var(--bg)"
               stroke="var(--border-strong)"
               strokeWidth="1"
             />
@@ -281,7 +293,7 @@ export function HeroVisual() {
               y1="204"
               x2="868"
               y2="204"
-              stroke="var(--algo-aqua)"
+              stroke="var(--flow-3)"
               strokeWidth="2"
               strokeLinecap="round"
             />
@@ -299,12 +311,6 @@ export function HeroVisual() {
             ))}
           </g>
 
-          {/* ---- ambient pulses: three dots that ride the flow after the intro ---- */}
-          <g data-anim="pulses" fill="var(--algo-aqua)">
-            {RECORD_Y.map((y) => (
-              <circle key={y} data-anim="pulse" r="3.5" cx="0" cy="0" opacity="0" />
-            ))}
-          </g>
         </svg>
       </div>
     </div>

@@ -101,11 +101,22 @@ hooks. Nothing below the fold is built until the hero has had its first frame
 within a viewport of the fold; anything already on screen when its section is
 built is left exactly as the static HTML has it. Nothing plays twice.
 
-Two places spend the boldness: the hero sequence (`HeroSequence`, ~1.8s, once,
-then three ambient pulses on the pipeline that pause while the hero is off
-screen) and the "How it works" scene (`ProcessSequence`), which holds still
-with CSS `position: sticky` and changes state as each step reaches the reading
-line. Neither pins or hijacks the scroll.
+Two places spend the boldness: the hero sequence (`HeroSequence`: the
+headline's words rise out of masked lines, the sub-head arrives word by word,
+the pipeline draws itself, then three ambient pulses ride the flow and pause
+while the hero is off screen) and the "How it works" board (`ProcessBoard` +
+`ProcessSequence`), which holds still with CSS `position: sticky` and changes
+stage as each step reaches the reading line. Neither pins or hijacks the
+scroll.
+
+Both diagrams follow the theme. Their strokes and beams come through the
+`--flow-*` tokens in `globals.css`, which mix the accent family toward blue
+and ink on paper and use it raw on navy. The board is HTML nodes with an SVG
+overlay whose beams are measured from the nodes' positions; its motion is
+CSS keyed off a `data-stage` attribute (travelling beams, receding later
+stages, the tick drawing), so the scroll handler costs one attribute write.
+The border light on both cards and the drifting glow behind the hero are CSS
+too.
 
 The contract every piece of motion keeps:
 
