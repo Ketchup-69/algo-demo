@@ -25,8 +25,7 @@ export type SiteConfig = {
   description: string;
   /**
    * Single source of truth for the contact address. Every form and every CTA
-   * builds its `mailto:` composer from this one constant (§7). The composer
-   * itself lands in Phase 3.
+   * builds its `mailto:` composer from this one constant (§7).
    */
   contactEmail: string;
   /** Canonical origin. Used for metadata once the domain is decided. */
@@ -42,6 +41,26 @@ export type SiteConfig = {
     email: string;
   };
   legalLine: string;
+  /** The footer's closing invitation. Resolves to the same composer as every CTA (§7). */
+  footerCta: { label: string; href: string };
+  /**
+   * Chrome strings: labels for controls that are not page copy but are still
+   * user-facing. Kept here so a component never holds a string (§6).
+   */
+  ui: {
+    skipToContent: string;
+    openMenu: string;
+    closeMenu: string;
+    menuLabel: string;
+    primaryNavLabel: string;
+    themeToggle: { neutral: string; toLight: string; toDark: string };
+    footerSections: string;
+    footerContact: string;
+    footerElsewhere: string;
+    backToTop: string;
+    backToWriting: string;
+    readingTime: (minutes: number) => string;
+  };
 };
 
 export const site: SiteConfig = {
@@ -94,6 +113,27 @@ export const site: SiteConfig = {
 
   // PLACEHOLDER: confirm the registered entity name and year with the owner
   legalLine: "© 2026 Algomotive. All rights reserved.",
+
+  footerCta: { label: "Start a conversation", href: "#contact" },
+
+  ui: {
+    skipToContent: "Skip to content",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
+    menuLabel: "Menu",
+    primaryNavLabel: "Primary",
+    themeToggle: {
+      neutral: "Switch colour theme",
+      toLight: "Switch to light theme",
+      toDark: "Switch to dark theme",
+    },
+    footerSections: "Sections",
+    footerContact: "Contact",
+    footerElsewhere: "Elsewhere",
+    backToTop: "Back to top",
+    backToWriting: "Back to writing",
+    readingTime: (minutes) => `${minutes} min read`,
+  },
 };
 
 /**
@@ -101,16 +141,17 @@ export const site: SiteConfig = {
  * Returns null when no address is configured, so callers can fall back to a
  * copy-to-clipboard line rather than rendering a dead link (§7).
  *
- * Phase 3 wires this to the form. Phase 1 only uses it for plain contact links.
+ * The contact form composes through this, and so does every plain contact link.
  */
 export function buildMailto(options?: {
   subject?: string;
   body?: string;
 }): string | null {
   if (!site.contactEmail) return null;
-  const params = new URLSearchParams();
-  if (options?.subject) params.set("subject", options.subject);
-  if (options?.body) params.set("body", options.body);
-  const query = params.toString();
-  return `mailto:${site.contactEmail}${query ? `?${query}` : ""}`;
+  // encodeURIComponent, not URLSearchParams: the latter writes spaces as "+",
+  // which mail clients show literally in the subject line.
+  const params: string[] = [];
+  if (options?.subject) params.push(`subject=${encodeURIComponent(options.subject)}`);
+  if (options?.body) params.push(`body=${encodeURIComponent(options.body)}`);
+  return `mailto:${site.contactEmail}${params.length ? `?${params.join("&")}` : ""}`;
 }

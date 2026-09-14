@@ -19,6 +19,54 @@ export const hero = {
   /** Accessible description of the hero diagram, for screen readers. */
   visualAlt:
     "Diagram of the agent pipeline: purchase order, goods received note and invoice records converge on a matching step, exceptions branch off for review, and approved items pass a human approval gate before being recorded.",
+  /**
+   * Labels drawn inside the hero diagram. They are real product vocabulary,
+   * not decoration, which is why they live here with the rest of the copy.
+   */
+  visual: {
+    title: "Three-way match",
+    status: { pending: "Awaiting approval", approved: "Approved" },
+    records: ["Purchase order", "Goods received", "Invoice"],
+    match: "Match",
+    exception: "Exception",
+    gate: "Approval",
+    ledger: "Ledger",
+  },
+} as const;
+
+/* ------------------------------------------------------------- logo strip -- */
+
+export type LogoSlot = {
+  /** Accessible name of the organisation. Empty while the slot is a placeholder. */
+  name: string;
+  /** Path under /public, e.g. "/logos/example.svg". Empty while a placeholder. */
+  src: string;
+};
+
+/**
+ * PLACEHOLDER: replace when client logos are approved.
+ *
+ * CLAUDE.md §2 forbids client names and logos, including in placeholders, so
+ * every slot below is deliberately empty and the strip renders neutral tiles
+ * with a visible note. To populate: fill `name` and `src` on each slot, then
+ * set `placeholder: false`. To ship without the strip: `enabled: false`.
+ *
+ * Edit: src/content/sections.ts → logos
+ */
+export const logos = {
+  id: "logos",
+  enabled: true,
+  placeholder: true,
+  placeholderNote: "Client logos pending approval",
+  slotLabel: "Logo",
+  slots: [
+    { name: "", src: "" },
+    { name: "", src: "" },
+    { name: "", src: "" },
+    { name: "", src: "" },
+    { name: "", src: "" },
+    { name: "", src: "" },
+  ] as LogoSlot[],
 } as const;
 
 /* --------------------------------------------------------------- problem -- */
@@ -130,6 +178,22 @@ export const howItWorks = {
         "Nothing posts to a system of record without a human decision. Every step, every source and every approval is logged.",
     },
   ] as Step[],
+  /**
+   * Labels drawn inside the process diagram that sits beside the steps. One
+   * scene, three states: the reader's position in the steps is the position
+   * in the process.
+   */
+  scene: {
+    alt: "Diagram of the process: an agent reads from the ERP, property management system and bank feed; prepares matched items, exceptions and drafts; a controller approves; only then is anything posted to the system of record and logged.",
+    sources: ["ERP", "PMS", "Bank feed"],
+    agent: "Agent",
+    access: { read: "Read-only", write: "Write, per process" },
+    prepared: ["Matched", "Exception", "Draft"],
+    approver: "Controller",
+    approved: "Approved",
+    record: "System of record",
+    audit: "Logged: source, decision, approver, time",
+  },
 } as const;
 
 /* ------------------------------------------------------- beyond finance -- */
@@ -204,7 +268,43 @@ export const governance = {
         "Public, internal and restricted data are handled differently, up to and including self-hosted inference for restricted workloads.",
     },
   ] as Category[],
+  /**
+   * An illustrative approval queue, built in code rather than screenshotted.
+   * Identifiers are generic document numbers, never a customer or supplier
+   * name (§2). `caption` states plainly that it is not a screenshot, and it is
+   * rendered whenever `illustrative` is true.
+   */
+  console: {
+    illustrative: true,
+    caption: "Illustrative interface, not a screenshot.",
+    title: "Approval queue",
+    columns: { item: "Item", agent: "Agent", status: "Status" },
+    rows: [
+      { item: "Supplier statement 0417", agent: "Accounts Payable", status: "pending" },
+      { item: "Payment run, week 37", agent: "Accounts Payable", status: "pending" },
+      { item: "PO 8830 three-way match", agent: "Purchase Order", status: "exception" },
+      { item: "Collections queue, 14 days", agent: "Receivables", status: "approved" },
+    ] as ConsoleRow[],
+    statusLabels: {
+      pending: "Awaiting approval",
+      approved: "Approved",
+      exception: "Needs review",
+    },
+    /** The audit line that appends when the first row is approved on reveal. */
+    auditTitle: "Audit trail",
+    auditLines: [
+      "Source: supplier statement, ledger",
+      "Decision: approve",
+      "Approver: Financial Controller",
+    ],
+  },
 } as const;
+
+export type ConsoleRow = {
+  item: string;
+  agent: string;
+  status: "pending" | "approved" | "exception";
+};
 
 /* ---------------------------------------------------------- integrations -- */
 
@@ -327,12 +427,34 @@ export const contact = {
     { name: "message", label: "What does the week look like?", type: "textarea", required: true },
   ] as Field[],
   submitLabel: "Send",
-  /** Phase 3 replaces this with the real mailto: composer (§7). */
-  stubNotice: "Submission is not wired up yet — the mailto composer lands in Phase 3.",
+  /** Shown beside the button. `mailto:` is the whole mechanism (§7), so say so. */
+  submitNote: "Opens in your email app.",
+  /**
+   * The `mailto:` composer. `{company}` and `{name}` are substituted from the
+   * form. The body lists every field on its own line.
+   */
+  subjectTemplate: "Website enquiry from {name}, {company}",
+  composer: {
+    title: "Your email app should have opened.",
+    body: "If nothing happened, copy the address or the message and send it from wherever you read email.",
+    addressLabel: "Address",
+    copyAddress: "Copy address",
+    copyMessage: "Copy message",
+    copied: "Copied",
+    edit: "Edit the message",
+  },
   errors: {
     required: "This field is required.",
     email: "Enter a valid work email address.",
   },
+} as const;
+
+/* ------------------------------------------------------------- not found -- */
+
+export const notFound = {
+  title: "That page is not here.",
+  body: "The address may have changed, or it never existed. Everything on the site is one page down from the start.",
+  cta: { label: "Back to the start", href: "/" },
 } as const;
 
 /* ---------------------------------------------------------------- legal -- */

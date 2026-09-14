@@ -40,8 +40,15 @@ jobs:
       - name: Verify export output
         run: |
           test -f out/index.html || { echo "missing out/index.html"; exit 1; }
-          test -f out/styleguide/index.html || { echo "missing styleguide"; exit 1; }
+          test -f out/blog/index.html || { echo "missing blog index"; exit 1; }
+          test -f out/sitemap.xml || { echo "missing sitemap.xml"; exit 1; }
+          test -f out/robots.txt || { echo "missing robots.txt"; exit 1; }
+          test -f out/opengraph-image.png || { echo "missing opengraph-image.png"; exit 1; }
           test -f out/.nojekyll || { echo "missing .nojekyll — Pages will drop _next/"; exit 1; }
+          # Every string must be in the static HTML at load (CLAUDE.md §5).
+          grep -q "AI agents that work inside the systems" out/index.html || { echo "hero copy missing from static HTML"; exit 1; }
+          # The only brand name on the site is Algomotive (§2): no Google Sans.
+          if grep -rqi "google sans\|product sans" out/_next/static; then echo "proprietary font reference found"; exit 1; fi
 
       # basePath is the one-line switch to a custom domain, so prove it still
       # rewrites every asset path rather than finding out after a deploy.
