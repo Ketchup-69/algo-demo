@@ -135,6 +135,16 @@
     transparent 70%
   );
 
+  /* Diagram strokes and beams. The accent family (sky, cyan, aqua) only
+     reads on a dark ground — on paper they measure 1.5 to 2.0 — so the light
+     theme mixes them toward blue and ink, and the dark theme uses them raw.
+     Decorative lines, so 3:1 is the bar, and every stop clears it. */
+  --flow-1: var(--algo-blue); /* #3978e8 · 3.96 on white */
+  --flow-2: color-mix(in oklab, var(--algo-cyan) 40%, var(--algo-blue));
+  --flow-3: var(--accent);
+  --flow-warn: color-mix(in oklab, var(--algo-warning) 55%, var(--algo-ink));
+  --pulse: var(--accent);
+
   /* Elevation */
   --shadow-raised: 0 1px 2px -1px rgb(23 36 63 / 0.08), 0 4px 16px -4px rgb(23 36 63 / 0.1);
   --shadow-overlay: 0 8px 40px -8px rgb(23 36 63 / 0.18);
@@ -196,6 +206,12 @@
     color-mix(in srgb, var(--algo-cyan) 16%, transparent) 0%,
     transparent 70%
   );
+
+  --flow-1: var(--algo-blue);
+  --flow-2: var(--algo-cyan);
+  --flow-3: var(--algo-aqua);
+  --flow-warn: var(--algo-warning);
+  --pulse: var(--algo-aqua);
 
   /* Shadows do almost nothing on a dark ground; lean on surface lift instead
      and keep these for overlays that need separation from the page. */
@@ -496,4 +512,142 @@
 /* Placeholder tiles for the logo strip: a dashed hairline, nothing inside. */
 @utility border-dashed-placeholder {
   border: 1px dashed var(--border-strong);
+}
+
+/* --------------------------------------------------------------------------
+   THE TWO DIAGRAMS AND THE HERO GROUND
+
+   Everything here is CSS-driven so that it costs nothing on the main thread:
+   the beams travel with a stroke-dashoffset keyframe on a tiny SVG overlay,
+   the border light rides an offset-path, the stage of the process board is a
+   data attribute that these rules turn into transitions. JavaScript only
+   flips the attribute. All of it is theme-aware through the tokens above, and
+   all of it is absent under reduced motion.
+   -------------------------------------------------------------------------- */
+
+/* A dot pattern with a radial mask, for the hero ground. */
+@utility bg-dot-pattern {
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--fg) 14%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+  mask-image: radial-gradient(70% 60% at 50% 0%, black 30%, transparent 100%);
+}
+
+/* The slow light behind the hero: the glow token, drifting. Transform only. */
+@keyframes spotlight-drift {
+  0% { transform: translate3d(-6%, -4%, 0) scale(1); }
+  50% { transform: translate3d(6%, 4%, 0) scale(1.08); }
+  100% { transform: translate3d(-6%, -4%, 0) scale(1); }
+}
+@utility animate-spotlight {
+  animation: spotlight-drift 18s ease-in-out infinite;
+}
+
+/* A light that rides the border of a card. The overlay is masked to its own
+   1.5px ring (padding-box out of border-box), and the ::after is a short
+   gradient bar carried around the rectangle on an offset path. */
+.border-beam {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1.5px solid transparent;
+  pointer-events: none;
+  mask-image: linear-gradient(black, black), linear-gradient(black, black);
+  mask-clip: padding-box, border-box;
+  mask-composite: exclude;
+  -webkit-mask-image: linear-gradient(black, black), linear-gradient(black, black);
+  -webkit-mask-clip: padding-box, border-box;
+  -webkit-mask-composite: xor;
+}
+.border-beam::after {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  background: linear-gradient(
+    to left,
+    color-mix(in srgb, var(--flow-3) 85%, transparent),
+    color-mix(in srgb, var(--flow-1) 60%, transparent) 40%,
+    transparent
+  );
+  offset-path: rect(0 auto auto 0 round var(--beam-radius, 16px));
+  offset-anchor: 100% 50%;
+  opacity: 0;
+}
+@keyframes border-beam {
+  from { offset-distance: 0%; }
+  to { offset-distance: 100%; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .border-beam::after {
+    opacity: 1;
+    animation: border-beam 9s linear infinite;
+  }
+}
+
+/* A traveling beam along an SVG path: a short dash moving through a long gap.
+   The dasharray is set on the element; the keyframe moves it one full period. */
+@keyframes beam-travel {
+  to { stroke-dashoffset: -420; }
+}
+.beam {
+  stroke-dasharray: 36 384;
+  stroke-dashoffset: 0;
+  opacity: 0;
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The agent node's breathing ring. Transform and opacity only. */
+@keyframes ring-breathe {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  70% { transform: scale(1.35); opacity: 0; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+
+/* The process board: one data attribute, three stages. Before the reader
+   reaches the section (stage 0) the board shows the whole picture with the
+   beams off. From stage 1 on, everything later than the current stage recedes
+   — half opacity and a few pixels low, still legible — and beams up to the
+   current stage are lit and travelling. Under reduced motion nothing recedes
+   and nothing travels; the markup's default is the finished picture. */
+.process-board [data-at] {
+  transition:
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .process-board[data-stage="1"] [data-at="2"],
+  .process-board[data-stage="1"] [data-at="3"],
+  .process-board[data-stage="2"] [data-at="3"] {
+    opacity: 0.5;
+    transform: translateY(6px);
+  }
+  .process-board[data-stage="1"] .beam[data-at="1"],
+  .process-board[data-stage="2"] .beam[data-at="1"],
+  .process-board[data-stage="2"] .beam[data-at="2"],
+  .process-board[data-stage="3"] .beam[data-at="1"],
+  .process-board[data-stage="3"] .beam[data-at="2"],
+  .process-board[data-stage="3"] .beam[data-at="3"] {
+    opacity: 1;
+    animation: beam-travel 2.6s linear infinite;
+  }
+  .process-board[data-stage="1"] .ring,
+  .process-board[data-stage="2"] .ring,
+  .process-board[data-stage="3"] .ring {
+    animation: ring-breathe 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+  .process-board[data-stage="3"] .tick {
+    stroke-dashoffset: 0;
+  }
+  .process-board:not([data-stage="3"]) .tick {
+    stroke-dashoffset: 24;
+  }
+}
+.tick {
+  stroke-dasharray: 24;
+  transition: stroke-dashoffset 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.35s;
 }

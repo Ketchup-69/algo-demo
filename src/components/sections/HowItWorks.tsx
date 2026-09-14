@@ -1,18 +1,18 @@
 import { Container, Heading, Section, Text } from "@/components/ui";
 import { ProcessSequence, Reveal } from "@/components/motion";
 import { howItWorks } from "@/content/sections";
-import { ProcessScene } from "./ProcessScene";
+import { ProcessBoard } from "./ProcessBoard";
 
 /**
  * The only numbered section on the page. CLAUDE.md §4 bans `01 / 02 / 03`
  * markers on content that is not an actual sequence — this one is, so the
  * numbering is doing real work here and must not be copied elsewhere.
  *
- * It also carries the page's one signature scroll moment: the scene holds
- * still (CSS sticky, native scroll) while the steps pass, and changes state as
+ * It also carries the page's one signature scroll moment: the board holds
+ * still (CSS sticky, native scroll) while the steps pass, and changes stage as
  * each step reaches the reading line. See ProcessSequence for why it is not
- * pinned. On small screens the scene sticks to the top of the viewport and the
- * steps scroll beneath it, so the DOM order is scene first, steps second, and
+ * pinned. On small screens the board sticks to the top of the viewport and the
+ * steps scroll beneath it, so the DOM order is board first, steps second, and
  * the grid reorders them on large screens.
  */
 export function HowItWorks() {
@@ -34,14 +34,11 @@ export function HowItWorks() {
                 row by default, and a sticky element as tall as its container
                 has nowhere to travel. `top-[65px]` is the header (h-16 plus
                 its hairline), so no strip of copy shows between the two. */}
-            <div
-              data-scene-root
-              className="sticky top-[65px] z-10 -mx-5 bg-bg-subtle px-5 pt-3 pb-4 sm:-mx-6 sm:px-6 lg:order-2 lg:top-28 lg:mx-0 lg:self-start lg:bg-transparent lg:p-0"
-            >
-              {/* On tablets the panel is capped so the steps keep room to be
+            <div className="sticky top-[65px] z-10 -mx-5 bg-bg-subtle px-5 pt-3 pb-4 sm:-mx-6 sm:px-6 lg:order-2 lg:top-28 lg:mx-0 lg:self-start lg:bg-transparent lg:p-0">
+              {/* On tablets the board is capped so the steps keep room to be
                   read beneath it. */}
               <div className="sm:max-lg:mx-auto sm:max-lg:max-w-lg">
-                <ProcessScene />
+                <ProcessBoard />
               </div>
             </div>
 

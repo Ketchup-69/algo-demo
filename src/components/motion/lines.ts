@@ -55,3 +55,58 @@ export function linesFrom(
     ...vars,
   });
 }
+
+/**
+ * The hero's version: lines are masked, but it is the WORDS that rise, in a
+ * stagger that runs across the whole sentence. Each word climbs out of its
+ * own line's mask, so a two-line headline reads as one gesture rather than
+ * two blocks arriving. Same accessibility contract as revealLines.
+ */
+export function revealWords(
+  target: Element,
+  build: (words: Element[]) => gsap.core.Tween | gsap.core.Timeline,
+): SplitText {
+  return SplitText.create(target, {
+    type: "lines,words",
+    mask: "lines",
+    linesClass: "rl",
+    autoSplit: true,
+    aria: "auto",
+    onSplit: (self) => build(self.words),
+  });
+}
+
+/** The standard tween for a set of words rising out of their line masks. */
+export function wordsFrom(
+  words: Element[],
+  vars: gsap.TweenVars = {},
+): gsap.core.Tween {
+  return gsap.from(words, {
+    yPercent: 115,
+    duration: duration.lines,
+    ease: ease.reveal,
+    stagger: 0.035,
+    ...vars,
+  });
+}
+
+/**
+ * Body copy, word by word: opacity and a few pixels, no mask. Used for the
+ * hero sub-head, where a paragraph arriving as one block would fall behind
+ * the headline's rhythm.
+ *
+ * `aria: "none"`: a paragraph may not carry an aria-label (it has no role),
+ * and the word fragments are ordinary inline text that a screen reader
+ * reads as the sentence it is, so nothing needs hiding or relabelling.
+ */
+export function revealWordsSoft(
+  target: Element,
+  build: (words: Element[]) => gsap.core.Tween | gsap.core.Timeline,
+): SplitText {
+  return SplitText.create(target, {
+    type: "words",
+    autoSplit: true,
+    aria: "none",
+    onSplit: (self) => build(self.words),
+  });
+}
