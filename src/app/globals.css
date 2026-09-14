@@ -127,10 +127,11 @@
     var(--algo-aqua) 80%,
     transparent 100%
   ); /* decorative only — never a focus ring, never an input border */
-  /* Reserved for the Phase 2 signature moment. Deliberately unused right now. */
+  /* Used exactly once: the soft light at the top of the hero. Not a wash —
+     it fades to nothing inside the first viewport. */
   --grad-glow: radial-gradient(
-    60% 60% at 50% 0%,
-    color-mix(in srgb, var(--algo-cyan) 18%, transparent) 0%,
+    70% 55% at 50% 0%,
+    color-mix(in srgb, var(--algo-cyan) 14%, transparent) 0%,
     transparent 70%
   );
 
@@ -191,8 +192,8 @@
   --grad-surface: linear-gradient(180deg, var(--surface) 0%, var(--surface-raised) 100%); /* fg-muted worst 4.56 */
   --grad-accent-soft: linear-gradient(160deg, var(--accent-soft) 0%, var(--algo-navy) 100%); /* fg-muted worst 4.69 */
   --grad-glow: radial-gradient(
-    60% 60% at 50% 0%,
-    color-mix(in srgb, var(--algo-cyan) 22%, transparent) 0%,
+    70% 55% at 50% 0%,
+    color-mix(in srgb, var(--algo-cyan) 16%, transparent) 0%,
     transparent 70%
   );
 
@@ -369,6 +370,20 @@
     }
   }
 
+  /*
+    Masked line reveals. SplitText wraps each line in a clipping mask; the
+    line rises out of it. Display type sits at line-height 1.05, so a glyph's
+    descender would be cut by the mask edge — the line carries a little extra
+    room at the bottom and the mask gives it straight back, so the rhythm of
+    the heading does not change.
+  */
+  .rl {
+    padding-bottom: 0.14em;
+  }
+  .rl-mask {
+    margin-bottom: -0.14em;
+  }
+
   /* Every non-essential animation resolves instantly and renders its final
      state. GSAP is guarded separately via gsap.matchMedia(), which this rule
      cannot reach because GSAP writes inline styles. */
@@ -384,22 +399,101 @@
   }
 }
 
-/* Interaction motion, as CSS keyframes rather than a JS animation library.
-   Both are enter-only: an exit animation needs the element kept mounted past
-   its own removal, which is the one thing a library genuinely buys — and not
-   worth 43KB for two fades. `motion-safe:` applies them, so a reduced-motion
-   visitor gets the final state with no keyframes at all. */
+
+/* --------------------------------------------------------------------------
+   THEME WIPE
+
+   Switching theme runs through the View Transitions API when the browser has
+   it: the new theme opens as a circle from the toggle, over the old one. The
+   old snapshot holds still, the new one is clipped; nothing else animates.
+   The toggle writes --vt-x / --vt-y from its own position before it starts
+   the transition, and never starts one at all under reduced motion — so this
+   CSS is only ever reached by a visitor who has not opted out.
+   -------------------------------------------------------------------------- */
+::view-transition-old(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-new(root) {
+  animation: theme-wipe 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  mix-blend-mode: normal;
+}
+::view-transition-image-pair(root) {
+  isolation: auto;
+}
+@keyframes theme-wipe {
+  from {
+    clip-path: circle(0 at var(--vt-x, 100%) var(--vt-y, 0%));
+  }
+  to {
+    clip-path: circle(160vmax at var(--vt-x, 100%) var(--vt-y, 0%));
+  }
+}
+
+/* --------------------------------------------------------------------------
+   INTERACTION MOTION — CSS keyframes, not a JS library.
+
+   All enter-only. An exit animation needs the element kept mounted past its
+   own removal, which is the one thing a library genuinely buys, and it is not
+   worth 43KB for these. `motion-safe:` applies them, so a reduced-motion
+   visitor gets the final state with no keyframes at all.
+   -------------------------------------------------------------------------- */
 @keyframes sheet-in {
   from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes sheet-item-in {
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 @keyframes field-error {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+/* A route change. The new page settles in from 8px; the header is not part
+   of the template, so it stays exactly where it was.
+   Fill mode is `backwards`, not `both`: `both` would leave an identity
+   transform on the wrapper after the animation, which makes it the
+   containing block for every position:fixed descendant — the reading
+   progress line on a post would scroll away with the page. */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* The contact composer swapping in for the form. */
+@keyframes panel-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.995); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
 @utility animate-sheet-in {
-  animation: sheet-in 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  animation: sheet-in 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@utility animate-sheet-item-in {
+  animation: sheet-item-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @utility animate-field-error {
-  animation: field-error 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  animation: field-error 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@utility animate-page-in {
+  animation: page-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@utility animate-panel-in {
+  animation: panel-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* --------------------------------------------------------------------------
+   SURFACES USED BY THE TWO DIAGRAMS
+   -------------------------------------------------------------------------- */
+/* A faint dot grid behind the pipeline. Token-derived, so it is legible on
+   either ground and invisible enough to be felt rather than seen. */
+@utility bg-dot-grid {
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--fg) 9%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+}
+/* Placeholder tiles for the logo strip: a dashed hairline, nothing inside. */
+@utility border-dashed-placeholder {
+  border: 1px dashed var(--border-strong);
 }

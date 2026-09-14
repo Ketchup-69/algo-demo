@@ -21,7 +21,7 @@ const spacings = {
   none: "",
   sm: "py-12 sm:py-16",
   md: "py-16 sm:py-20 lg:py-24",
-  lg: "py-24 sm:py-32 lg:py-40",
+  lg: "py-20 sm:py-28 lg:py-32",
 } as const;
 
 const tones = {

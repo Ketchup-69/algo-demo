@@ -8,13 +8,13 @@ import { site } from "@/content/site";
  * replace the contents of the `<span>` below with the inline SVG and nothing
  * else in the codebase changes — Nav and Footer both come through here.
  *
- * Keep the `aria-label` on whatever replaces it, and keep the SVG inline
- * rather than an <img> so it inherits `currentColor` and works in both themes.
+ * Give the SVG `role="img"` and `aria-label={site.name}` (a plain span may
+ * not carry a label, so the wordmark relies on its text), and keep the SVG
+ * inline rather than an <img> so it inherits `currentColor` in both themes.
  */
 export function Logo({ className }: { className?: string }) {
   return (
     <span
-      aria-label={site.name}
       className={cn(
         "font-display text-lg font-semibold tracking-[-0.02em] text-fg",
         className,

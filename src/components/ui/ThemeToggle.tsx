@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useRef, useSyncExternalStore } from "react";
 import { cn } from "@/lib/cn";
+import { site } from "@/content/site";
 import { applyTheme, getAppliedTheme, themeStore, type Theme } from "@/lib/theme";
+import { prefersReducedMotion } from "@/lib/motion";
 
 type ThemeToggleProps = {
   className?: string;
@@ -14,11 +16,17 @@ type ThemeToggleProps = {
  * it during render instead would make the client's first render disagree with
  * the server HTML and trip a hydration warning.
  *
+ * Switching runs through the View Transitions API where it exists: the new
+ * theme opens as a circle from the button over the old one (the CSS is in
+ * globals.css). Without the API, or under reduced motion, it is an instant
+ * swap — which is also what the transition resolves to.
+ *
  * Which icon shows is decided in CSS off the ancestor `data-theme` attribute,
  * so the button looks right immediately — before hydration, and with JS
  * disabled entirely.
  */
 export function ThemeToggle({ className }: ThemeToggleProps) {
+  const ref = useRef<HTMLButtonElement>(null);
   const theme = useSyncExternalStore<Theme | null>(
     themeStore.subscribe,
     themeStore.getSnapshot,
@@ -26,20 +34,35 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
   );
 
   const toggle = useCallback(() => {
-    applyTheme(getAppliedTheme() === "dark" ? "light" : "dark");
+    const next: Theme = getAppliedTheme() === "dark" ? "light" : "dark";
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => void) => unknown;
+    };
+    if (!doc.startViewTransition || prefersReducedMotion()) {
+      applyTheme(next);
+      return;
+    }
+    const rect = ref.current?.getBoundingClientRect();
+    if (rect) {
+      const root = document.documentElement;
+      root.style.setProperty("--vt-x", `${rect.left + rect.width / 2}px`);
+      root.style.setProperty("--vt-y", `${rect.top + rect.height / 2}px`);
+    }
+    doc.startViewTransition(() => applyTheme(next));
   }, []);
 
   // Neutral but still accurate until React can read the DOM, so the control is
   // never mislabelled to a screen reader.
   const label =
     theme === null
-      ? "Switch colour theme"
+      ? site.ui.themeToggle.neutral
       : theme === "dark"
-        ? "Switch to light theme"
-        : "Switch to dark theme";
+        ? site.ui.themeToggle.toLight
+        : site.ui.themeToggle.toDark;
 
   return (
     <button
+      ref={ref}
       type="button"
       onClick={toggle}
       aria-label={label}
@@ -59,7 +82,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       <svg
         aria-hidden="true"
         viewBox="0 0 24 24"
-        className="size-[18px] transition-[opacity,transform] duration-200 [[data-theme='dark']_&]:scale-75 [[data-theme='dark']_&]:opacity-0 motion-reduce:transition-none [[data-theme='dark']_&]:absolute"
+        className="size-[18px] transition-[opacity,transform] duration-300 [[data-theme='dark']_&]:scale-50 [[data-theme='dark']_&]:-rotate-90 [[data-theme='dark']_&]:opacity-0 motion-reduce:transition-none [[data-theme='dark']_&]:absolute"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.75"
@@ -72,7 +95,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       <svg
         aria-hidden="true"
         viewBox="0 0 24 24"
-        className="absolute size-[18px] scale-75 opacity-0 transition-[opacity,transform] duration-200 motion-reduce:transition-none [[data-theme='dark']_&]:relative [[data-theme='dark']_&]:scale-100 [[data-theme='dark']_&]:opacity-100"
+        className="absolute size-[18px] scale-50 rotate-90 opacity-0 transition-[opacity,transform] duration-300 motion-reduce:transition-none [[data-theme='dark']_&]:relative [[data-theme='dark']_&]:scale-100 [[data-theme='dark']_&]:rotate-0 [[data-theme='dark']_&]:opacity-100"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.75"

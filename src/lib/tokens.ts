@@ -1,10 +1,9 @@
 /**
  * The token system as data.
  *
- * `globals.css` is the runtime source of truth — this file mirrors it so two
- * things that cannot read CSS can still reason about the palette: the build-time
- * contrast gate (`scripts/check-contrast.ts`) and the /styleguide page, which
- * prints live measured ratios rather than numbers someone typed in by hand.
+ * `globals.css` is the runtime source of truth — this file mirrors it so the
+ * build-time contrast gate (`scripts/check-contrast.mts`), which cannot read
+ * CSS, can still reason about the palette and fail the build on a regression.
  *
  * If you change a mix percentage in globals.css, change it here too. The gate
  * is what catches you if you forget — it fails the build, not the deploy.
@@ -158,7 +157,7 @@ export type ThemeName = keyof typeof themes;
 
 export const aliasNames = Object.keys(lightAliases) as AliasName[];
 
-/** Short note on what each alias is for, shown on the styleguide. */
+/** Short note on what each alias is for, printed by the gate on failure. */
 export const aliasNotes: Record<AliasName, string> = {
   bg: "Page ground",
   "bg-subtle": "Recessed band — light tints, dark recedes",

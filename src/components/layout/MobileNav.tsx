@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import NextLink from "next/link";
 import { cn } from "@/lib/cn";
 import { site } from "@/content/site";
@@ -11,10 +12,24 @@ import { Logo } from "./Logo";
 /**
  * Full-screen navigation sheet for small viewports.
  *
- * No animation — it is present or it is not. The sheet is a real modal, so it
- * carries the obligations of one: Escape closes it, the page behind it cannot
- * scroll, focus moves into it on open and returns to the trigger on close, and
- * Tab is contained inside it while open.
+ * The sheet is a real modal, so it carries the obligations of one: Escape
+ * closes it, the page behind it cannot scroll, focus moves into it on open and
+ * returns to the trigger on close, and Tab is contained inside it while open.
+ *
+ * It answers a tap, so it moves — but only just. The sheet comes up from 8px,
+ * and the links arrive one after another beneath it. Enter-only, in CSS: an
+ * exit animation needs the node kept mounted past its own removal, which is
+ * the one thing a library buys and not worth its weight for this.
+ *
+ * The sheet is portalled to <body>. It is `position: fixed`, and the header
+ * it would otherwise live in has a backdrop-filter once the page scrolls —
+ * which makes the header the containing block for fixed descendants and
+ * clipped the whole menu to the header's 65px.
+ *
+ * Two ways out, two focus destinations. Escape and the close button return
+ * focus to the button that opened the sheet. Choosing a link does not: the
+ * reader has just navigated, so focus goes to the section they chose, and
+ * their next Tab continues from there instead of jumping back to the top.
  */
 export function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -24,6 +39,17 @@ export function MobileNav() {
   const close = useCallback(() => {
     setOpen(false);
     triggerRef.current?.focus();
+  }, []);
+
+  const follow = useCallback((href: string) => {
+    setOpen(false);
+    if (!href.startsWith("/#")) return;
+    const target = document.getElementById(href.slice(2));
+    if (!target) return;
+    // The section is not focusable by default; make it so without adding it
+    // to the Tab sequence, then let the browser's own anchor scroll happen.
+    if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
+    target.focus({ preventScroll: true });
   }, []);
 
   // Lock the page behind the sheet.
@@ -71,6 +97,13 @@ export function MobileNav() {
       ?.focus();
   }, [open]);
 
+  const iconButton = cn(
+    "inline-flex size-9 items-center justify-center rounded-md",
+    "border border-border-strong bg-surface text-fg-muted",
+    "transition-colors hover:bg-bg-subtle hover:text-fg",
+    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+  );
+
   return (
     <>
       <button
@@ -78,13 +111,8 @@ export function MobileNav() {
         type="button"
         onClick={() => setOpen(true)}
         aria-expanded={open}
-        aria-label="Open menu"
-        className={cn(
-          "inline-flex size-9 items-center justify-center rounded-md lg:hidden",
-          "border border-border-strong bg-surface text-fg-muted",
-          "transition-colors hover:bg-bg-subtle hover:text-fg",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-        )}
+        aria-label={site.ui.openMenu}
+        className={cn(iconButton, "lg:hidden")}
       >
         <svg
           aria-hidden="true"
@@ -99,19 +127,12 @@ export function MobileNav() {
         </svg>
       </button>
 
-      {/*
-        The sheet answers a tap, so it moves — but only just. It comes up from
-        8px rather than sliding the full height: a full-screen slide is a
-        transition, and this is a disclosure. AnimatePresence keeps the element
-        mounted long enough to leave; focus has already returned to the trigger
-        by then, so the exit is purely visual.
-      */}
-      {open ? (
+      {open ? createPortal(
         <div
           ref={sheetRef}
           role="dialog"
           aria-modal="true"
-          aria-label="Menu"
+          aria-label={site.ui.menuLabel}
           className="motion-safe:animate-sheet-in fixed inset-0 z-50 flex flex-col bg-bg lg:hidden"
         >
           <div className="flex h-16 shrink-0 items-center justify-between px-5 sm:px-6">
@@ -119,13 +140,8 @@ export function MobileNav() {
             <button
               type="button"
               onClick={close}
-              aria-label="Close menu"
-              className={cn(
-                "inline-flex size-9 items-center justify-center rounded-md",
-                "border border-border-strong bg-surface text-fg-muted",
-                "transition-colors hover:bg-bg-subtle hover:text-fg",
-                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-              )}
+              aria-label={site.ui.closeMenu}
+              className={iconButton}
             >
               <svg
                 aria-hidden="true"
@@ -142,29 +158,36 @@ export function MobileNav() {
           </div>
 
           <nav
-            aria-label="Primary"
-            className="flex flex-1 flex-col gap-1 overflow-y-auto px-5 pt-4 sm:px-6"
+            aria-label={site.ui.primaryNavLabel}
+            className="flex flex-1 flex-col overflow-y-auto px-5 pt-6 sm:px-6"
           >
-            {site.nav.map((item) => (
+            {site.nav.map((item, i) => (
               <NextLink
                 key={item.href}
                 href={item.href}
-                onClick={close}
-                className="border-b border-border py-4 font-display text-2xl font-semibold text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                onClick={() => follow(item.href)}
+                style={{ animationDelay: `${80 + i * 50}ms` }}
+                className="motion-safe:animate-sheet-item-in border-b border-border py-5 font-display text-3xl font-semibold text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
                 {item.label}
               </NextLink>
             ))}
-            <Button
-              href={hero.primaryCta.href}
-              size="lg"
-              className="mt-6 w-full"
-              onClick={close}
+            <div
+              style={{ animationDelay: `${80 + site.nav.length * 50}ms` }}
+              className="motion-safe:animate-sheet-item-in mt-8"
             >
-              {hero.primaryCta.label}
-            </Button>
+              <Button
+                href={hero.primaryCta.href}
+                size="lg"
+                className="w-full"
+                onClick={() => follow(hero.primaryCta.href)}
+              >
+                {hero.primaryCta.label}
+              </Button>
+            </div>
           </nav>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </>
   );
